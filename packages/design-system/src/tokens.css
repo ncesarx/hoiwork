@@ -1,0 +1,52 @@
+:root {
+  --hoi-color-midnight: #0d1b2a;
+  --hoi-color-petroleum: #173b4a;
+  --hoi-color-orange: #ff8a00;
+  --hoi-color-orange-bright: #ffb000;
+  --hoi-color-white: #f8f9fb;
+  --hoi-color-graphite: #2b2f36;
+  --hoi-color-steel: #6c7a89;
+  --hoi-color-silver: #dde4ea;
+  --hoi-color-light: #eef2f5;
+  --hoi-color-success: #00c853;
+  --hoi-color-warning: #ffb300;
+  --hoi-color-danger: #d32f2f;
+  --hoi-color-info: #0091ea;
+
+  --hoi-radius-sm: 0.5rem;
+  --hoi-radius-md: 0.75rem;
+  --hoi-radius-lg: 1rem;
+  --hoi-radius-xl: 1.5rem;
+  --hoi-radius-2xl: 2rem;
+  --hoi-radius-pill: 999px;
+
+  --hoi-shadow-sm: 0 4px 12px rgb(0 0 0 / 0.08);
+  --hoi-shadow-md: 0 10px 30px rgb(0 0 0 / 0.12);
+  --hoi-shadow-lg: 0 25px 60px rgb(0 0 0 / 0.18);
+  --hoi-shadow-glow: 0 0 40px rgb(255 138 0 / 0.25);
+
+  --hoi-motion-fast: 150ms;
+  --hoi-motion-normal: 250ms;
+  --hoi-motion-slow: 400ms;
+  --hoi-easing-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --hoi-background: var(--hoi-color-midnight);
+  --hoi-surface: rgb(23 59 74 / 0.72);
+  --hoi-surface-strong: #102b39;
+  --hoi-text: var(--hoi-color-white);
+  --hoi-text-muted: #a8bac7;
+  --hoi-border: rgb(221 228 234 / 0.16);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --hoi-background: var(--hoi-color-white);
+  --hoi-surface: rgb(255 255 255 / 0.88);
+  --hoi-surface-strong: var(--hoi-color-light);
+  --hoi-text: var(--hoi-color-midnight);
+  --hoi-text-muted: #526572;
+  --hoi-border: rgb(13 27 42 / 0.14);
+}
