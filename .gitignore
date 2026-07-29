@@ -1,0 +1,33 @@
+# Dependências
+node_modules/
+**/node_modules/
+
+# Next.js
+.next/
+**/.next/
+out/
+
+# Turborepo
+.turbo/
+**/.turbo/
+
+# Builds
+dist/
+build/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Ambiente
+.env
+.env.*
+!.env.example
+
+# Editores e sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
