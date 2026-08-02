@@ -9,11 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@hoi/design-system": "workspace:*",
+    "@hoi/ui": "workspace:*",
+    "framer-motion": "^12.43.0",
     "next": "16.2.12",
     "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "@hoi/design-system": "workspace:*",
-    "@hoi/ui": "workspace:*"
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

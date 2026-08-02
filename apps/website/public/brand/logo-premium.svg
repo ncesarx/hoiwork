@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 118" role="img" aria-labelledby="t d">
+<title id="t">Home &amp; Office Tech Solutions</title><desc id="d">Logotipo corporativo</desc>
+<defs><linearGradient id="silver" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset=".5" stop-color="#9aa5af"/><stop offset="1" stop-color="#f7f8fa"/></linearGradient><linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd261"/><stop offset=".45" stop-color="#e8a90a"/><stop offset="1" stop-color="#9a6200"/></linearGradient></defs>
+<g transform="translate(5 5)"><rect x="4" y="4" width="84" height="98" rx="20" fill="none" stroke="url(#silver)" stroke-width="8"/><rect x="50" y="31" width="54" height="54" rx="11" fill="#07111b" stroke="url(#silver)" stroke-width="7"/><path d="M25 31h28v10H37v15h16v10H37v23H25z" fill="url(#gold)"/><path d="M20 87h22v9H20z" fill="url(#silver)"/><path d="M48 90h18v8H48z" fill="url(#gold)"/></g>
+<text x="126" y="55" font-family="Arial, Helvetica, sans-serif" font-size="39" font-weight="700" letter-spacing="1" fill="#f7f7f5">HOME &amp; <tspan fill="url(#gold)">OFFICE</tspan></text>
+<text x="129" y="89" font-family="Arial, Helvetica, sans-serif" font-size="18" letter-spacing="9" fill="#e5e7eb">TECH SOLUTIONS</text>
+</svg>

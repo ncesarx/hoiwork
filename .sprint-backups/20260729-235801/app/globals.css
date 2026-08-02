@@ -1,0 +1,27 @@
+@import "tailwindcss";
+@import "@hoi/design-system/tokens.css";
+@source "../../../../packages/ui/src";
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--hoi-background);
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 75% 20%, rgb(255 138 0 / 0.14), transparent 24rem),
+    radial-gradient(circle at 20% 5%, rgb(23 59 74 / 0.7), transparent 30rem),
+    var(--hoi-background);
+  color: var(--hoi-text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: rgb(255 138 0 / 0.3);
+}
