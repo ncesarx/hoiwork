@@ -1,0 +1,5 @@
+import type { Metadata } from "next";
+import { company } from "@/content/company";
+const siteUrl=process.env.NEXT_PUBLIC_SITE_URL??"https://example.com";
+export function createMetadata(overrides:Metadata={}):Metadata{return{metadataBase:new URL(siteUrl),title:{default:company.legalName,template:`%s | ${company.shortName}`},description:company.description,alternates:{canonical:"/"},openGraph:{type:"website",locale:"pt_BR",url:siteUrl,siteName:company.legalName,title:company.legalName,description:company.description},twitter:{card:"summary_large_image",title:company.legalName,description:company.description},robots:{index:true,follow:true},...overrides};}
+export const organizationJsonLd={"@context":"https://schema.org","@type":"ProfessionalService",name:company.legalName,description:company.description,areaServed:{"@type":"AdministrativeArea",name:company.serviceArea},address:{"@type":"PostalAddress",addressRegion:company.state,addressCountry:company.country},serviceType:["Infraestrutura de TI","Cloud Computing","Segurança da Informação","Backup e Disaster Recovery","Suporte Especializado"]};

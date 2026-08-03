@@ -1,0 +1,2 @@
+import type { MetadataRoute } from "next";
+export default function manifest():MetadataRoute.Manifest{return{name:"Home & Office Tech Solutions",short_name:"Home & Office",description:"Infraestrutura, cloud, segurança, backup e suporte especializado.",start_url:"/",display:"standalone",background_color:"#071925",theme_color:"#D4A017",lang:"pt-BR",icons:[{src:"/favicon.ico",sizes:"any",type:"image/x-icon"}]};}
