@@ -17,13 +17,11 @@
     "@auth/prisma-adapter": "^2.11.3",
     "@hoi/design-system": "workspace:*",
     "@hoi/ui": "workspace:*",
-    "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^12.43.0",
     "next": "16.2.12",
     "next-auth": "5.0.0-beta.32",
-    "pg": "^8.22.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zod": "^4.4.3"
@@ -31,7 +29,6 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/pg": "^8.20.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

@@ -1,3 +1,8 @@
-import { contracts } from "@/content/portal-enterprise";
+import { getContracts } from "@/lib/portal-data";
 export const metadata={title:"Contratos | Portal Enterprise",robots:{index:false,follow:false}};
-export default function Page(){return <><section className="portal-heading"><span>Gestão de serviços</span><h1>Contratos</h1><p>Vigência, SLA e horas contratadas.</p></section><section className="enterprise-contracts">{contracts.map(c=>{const p=Math.round(c.consumedHours/c.availableHours*100);return <article key={c.id}><div><span>{c.id}</span><b>{c.status}</b></div><h2>{c.name}</h2><dl><div><dt>Vigência</dt><dd>{c.start} a {c.end}</dd></div><div><dt>SLA</dt><dd>{c.sla}</dd></div><div><dt>Horas</dt><dd>{c.consumedHours}h de {c.availableHours}h</dd></div></dl><div className="enterprise-progress"><i style={{width:`${p}%`}}/></div><small>{p}% utilizado</small></article>})}</section></>;}
+export default async function Page(){
+  const contracts=await getContracts();
+  return <><section className="portal-heading"><span>Dados reais</span><h1>Contratos</h1><p>Vigência e SLA consultados no PostgreSQL.</p></section>
+  <section className="data-contracts">{contracts.map(c=><article key={c.id}><div><span>{c.id}</span><b>{c.status}</b></div><h2>{c.name}</h2><dl><div><dt>Início</dt><dd>{new Intl.DateTimeFormat("pt-BR").format(c.startsAt)}</dd></div><div><dt>Término</dt><dd>{new Intl.DateTimeFormat("pt-BR").format(c.endsAt)}</dd></div><div><dt>SLA</dt><dd>{c.slaHours ? `${c.slaHours} horas` : "—"}</dd></div><div><dt>Horas mensais</dt><dd>{c.monthlyHours ?? "—"}</dd></div></dl></article>)}</section>
+  {!contracts.length?<p className="data-empty">Nenhum contrato cadastrado.</p>:null}</>;
+}

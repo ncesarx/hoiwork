@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MembershipRole {
+  CLIENT
+  MANAGER
+  TECHNICIAN
+  ADMIN
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String?
+  email         String       @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  active        Boolean      @default(true)
+  accounts      Account[]
+  sessions      Session[]
+  memberships   Membership[]
+  auditLogs     AuditLog[]
+  ticketsOpened Ticket[]     @relation("TicketOpenedBy")
+  ticketsOwned  Ticket[]     @relation("TicketAssignedTo")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+model Organization {
+  id           String       @id @default(cuid())
+  name         String
+  slug         String       @unique
+  cns          String?
+  active       Boolean      @default(true)
+  memberships  Membership[]
+  assets       Asset[]
+  tickets      Ticket[]
+  documents    Document[]
+  contracts    Contract[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Membership {
+  id             String         @id @default(cuid())
+  userId         String
+  organizationId String
+  role           MembershipRole @default(CLIENT)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now())
+  @@unique([userId, organizationId])
+  @@index([organizationId, role])
+}
+
+model Asset {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  type           String
+  manufacturer   String?
+  model          String?
+  serialNumber   String?
+  ipAddress      String?
+  location       String?
+  warrantyEndsAt DateTime?
+  status         String       @default("ONLINE")
+  metadata       Json?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  @@index([organizationId, type])
+}
+
+model Ticket {
+  id             String         @id @default(cuid())
+  organizationId String
+  openedById     String
+  assignedToId   String?
+  title          String
+  description    String         @db.Text
+  status         TicketStatus   @default(OPEN)
+  priority       TicketPriority @default(MEDIUM)
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  openedBy       User           @relation("TicketOpenedBy", fields: [openedById], references: [id])
+  assignedTo     User?          @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  @@index([organizationId, status])
+}
+
+model Document {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  category       String
+  storageKey     String
+  contentType    String
+  sizeBytes      Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  @@index([organizationId, category])
+}
+
+model Contract {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  status         String       @default("ACTIVE")
+  startsAt       DateTime
+  endsAt         DateTime
+  slaHours       Int?
+  monthlyHours   Int?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  @@index([organizationId, status])
+}
+
+model AuditLog {
+  id             String        @id @default(cuid())
+  organizationId String?
+  userId         String?
+  action         String
+  entity         String
+  entityId       String?
+  metadata       Json?
+  ipAddress      String?
+  userAgent      String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now())
+  @@index([organizationId, createdAt])
+  @@index([userId, createdAt])
+}
