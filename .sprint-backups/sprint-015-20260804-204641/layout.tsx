@@ -4,7 +4,6 @@ import { requireOrganization } from "@/lib/authz";
 import "./portal.css";
 import "./enterprise.css";
 import "./data-layer.css";
-import "./integration.css";
 
 export default async function PortalLayout({ children }: { children: ReactNode }) {
   await requireOrganization();

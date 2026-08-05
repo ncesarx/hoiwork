@@ -93,8 +93,6 @@ model Organization {
   updatedAt    DateTime     @updatedAt
   backupJobs    BackupJob[]
   drPlan        DisasterRecoveryPlan?
-  integrations          Integration[]
-  integrationResources  IntegrationResource[]
 }
 
 model Membership {
@@ -224,61 +222,4 @@ model DisasterRecoveryPlan {
   organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
-}
-
-model Integration {
-  id             String   @id @default(cuid())
-  organizationId String
-  provider       String
-  name           String
-  enabled        Boolean  @default(true)
-  mode           String   @default("LIVE")
-  status         String   @default("PENDING")
-  config         Json?
-  lastSyncAt     DateTime?
-  lastHealthAt   DateTime?
-  lastError      String?
-  organization   Organization @relation(fields:[organizationId],references:[id],onDelete:Cascade)
-  resources      IntegrationResource[]
-  syncRuns       IntegrationSyncRun[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  @@unique([organizationId,provider])
-  @@index([organizationId,status])
-}
-model IntegrationResource {
-  id String @id @default(cuid())
-  organizationId String
-  integrationId String
-  externalId String
-  kind String
-  name String
-  status String
-  node String?
-  cpuPercent Float?
-  memoryUsedBytes BigInt?
-  memoryTotalBytes BigInt?
-  diskUsedBytes BigInt?
-  diskTotalBytes BigInt?
-  uptimeSeconds BigInt?
-  metadata Json?
-  lastSeenAt DateTime
-  organization Organization @relation(fields:[organizationId],references:[id],onDelete:Cascade)
-  integration Integration @relation(fields:[integrationId],references:[id],onDelete:Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  @@unique([integrationId,externalId])
-  @@index([organizationId,kind,status])
-}
-model IntegrationSyncRun {
-  id String @id @default(cuid())
-  integrationId String
-  status String
-  startedAt DateTime
-  completedAt DateTime?
-  discoveredCount Int @default(0)
-  synchronizedCount Int @default(0)
-  errorMessage String?
-  integration Integration @relation(fields:[integrationId],references:[id],onDelete:Cascade)
-  @@index([integrationId,startedAt])
 }

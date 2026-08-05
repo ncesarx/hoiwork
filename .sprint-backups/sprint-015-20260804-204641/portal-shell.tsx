@@ -10,7 +10,6 @@ const items = [
   ["/portal/disaster-recovery", "Disaster Recovery", "◇"],
   ["/portal/backup", "Backup Center", "▤"],
   ["/portal/inventario", "Inventário", "▦"],
-  ["/portal/integracoes", "Integrações", "◉"],
   ["/portal/chamados", "Chamados", "◎"],
   ["/portal/documentos", "Documentos", "▤"],
   ["/portal/manutencoes", "Manutenções", "◇"],
