@@ -11,7 +11,6 @@ const items = [
   ["/portal/backup", "Backup Center", "▤"],
   ["/portal/inventario", "Inventário", "▦"],
   ["/portal/integracoes", "Integrações", "◉"],
-  ["/portal/discovery", "Discovery", "⌁"],
   ["/portal/chamados", "Chamados", "◎"],
   ["/portal/documentos", "Documentos", "▤"],
   ["/portal/manutencoes", "Manutenções", "◇"],

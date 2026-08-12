@@ -7,7 +7,6 @@ import "./data-layer.css";
 import "./integration.css";
 import "./integration-hotfix.css";
 import "./discovery.css";
-import "./discovery-ui.css";
 
 export default async function PortalLayout({ children }: { children: ReactNode }) {
   await requireOrganization();

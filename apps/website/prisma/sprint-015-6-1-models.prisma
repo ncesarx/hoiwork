@@ -1,0 +1,78 @@
+
+model InfrastructureAsset {
+  id               String       @id @default(cuid())
+  organizationId   String
+  integrationId    String?
+  externalId       String
+  provider         String
+  assetType        String
+  name             String
+  clusterName      String?
+  parentExternalId String?
+  nodeName         String?
+  status           String
+  ipAddress        String?
+  cpuPercent       Float?
+  cpuCores         Int?
+  memoryUsedBytes  BigInt?
+  memoryTotalBytes BigInt?
+  diskUsedBytes    BigInt?
+  diskTotalBytes   BigInt?
+  uptimeSeconds    BigInt?
+  version          String?
+  metadata         Json?
+  firstSeenAt      DateTime     @default(now())
+  lastSeenAt       DateTime     @default(now())
+  lastChangedAt    DateTime     @default(now())
+  active           Boolean      @default(true)
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  integration      Integration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, provider, externalId])
+  @@index([organizationId, assetType, status])
+  @@index([integrationId, lastSeenAt])
+}
+
+model DiscoveryRun {
+  id             String       @id @default(cuid())
+  organizationId String
+  integrationId  String?
+  userId         String?
+  provider       String
+  scope          String
+  status         String       @default("RUNNING")
+  endpoint       String?
+  version        String?
+  clusterName    String?
+  startedAt      DateTime     @default(now())
+  completedAt    DateTime?
+  durationMs     Int?
+  discovered     Int          @default(0)
+  createdCount   Int          @default(0)
+  updatedCount   Int          @default(0)
+  unchangedCount Int          @default(0)
+  offlineCount   Int          @default(0)
+  errorMessage   String?
+  metadata       Json?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  integration    Integration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  logs           DiscoveryLog[]
+
+  @@index([organizationId, startedAt])
+  @@index([integrationId, startedAt])
+}
+
+model DiscoveryLog {
+  id        String       @id @default(cuid())
+  runId     String
+  step      String
+  level     String       @default("INFO")
+  message   String
+  durationMs Int?
+  metadata  Json?
+  createdAt DateTime     @default(now())
+  run       DiscoveryRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, createdAt])
+}

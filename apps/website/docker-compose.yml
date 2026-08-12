@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: hoiwork
       POSTGRES_USER: hoiwork
-      POSTGRES_PASSWORD: $nC!w*72_Bwb@77.94
+      POSTGRES_PASSWORD: nC!w*72_Bwb@77.94
     ports:
       - "5432:5432"
     volumes:
