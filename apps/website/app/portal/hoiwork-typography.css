@@ -1,0 +1,11 @@
+:root {
+  --hoi-font-micro: 10px;
+  --hoi-font-small: 10px;
+  --hoi-font-body: 11px;
+  --hoi-font-heading-sm: 12px;
+  --hoi-font-kpi: 16px;
+  --hoi-line-small: 1.45;
+  --hoi-line-body: 1.55;
+}
+.portal-shell small { font-size: var(--hoi-font-small); line-height: var(--hoi-line-small); }
+.portal-shell h3 { font-size: var(--hoi-font-heading-sm); }

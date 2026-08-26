@@ -1,0 +1,30 @@
+.incident-reliability-panel{margin:18px 0;padding:22px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#0a202d,#041018)}.incident-reliability-heading{display:flex;justify-content:space-between;gap:20px}.incident-reliability-heading span{color:var(--gold2);font-size:10px}.incident-reliability-heading h2{margin:5px 0 7px}.incident-reliability-heading p{margin:0;color:#8d9aa3;font-size:10px;max-width:800px}.incident-reliability-period{display:grid;text-align:right}.incident-reliability-period strong{font-size:20px}.incident-reliability-period small{font-size:10px;color:#7d8992}.incident-reliability-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.incident-reliability-kpis article{padding:13px;border:1px solid var(--line);border-radius:10px;background:#ffffff04}.incident-reliability-kpis span{display:block;color:#78858e;font-size:10px}.incident-reliability-kpis strong{display:block;margin-top:4px;font-size:15px}.incident-reliability-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.incident-reliability-grid>section{padding:15px;border:1px solid var(--line);border-radius:12px;background:#061721}.incident-reliability-grid header span{color:var(--gold2);font-size:10px}.incident-reliability-grid h3{margin:4px 0 10px}.incident-reliability-grid article{display:grid;grid-template-columns:1.5fr .8fr 1fr .7fr;gap:8px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}.incident-reliability-grid article>div{display:grid;gap:2px}.incident-reliability-grid b{font-size:10px;color:#ff9f5b}.incident-reliability-grid strong{font-size:10px}.incident-reliability-grid small,.incident-reliability-grid span,.incident-reliability-grid em{font-size:10px;color:#7d8992}.incident-reliability-grid em{font-style:normal}.incident-reliability-empty{padding:18px;text-align:center;color:#7d8992;font-size:10px}@media(max-width:950px){.incident-reliability-grid{grid-template-columns:1fr}.incident-reliability-kpis{grid-template-columns:repeat(2,1fr)}}@media(max-width:550px){.incident-reliability-heading{flex-direction:column}.incident-reliability-period{text-align:left}.incident-reliability-kpis{grid-template-columns:1fr}.incident-reliability-grid article{grid-template-columns:1fr}}
+
+/* Sprint 015.6.11.3 — typography refinement */
+.incident-reliability-panel {
+  font-size: 11px;
+}
+
+.incident-reliability-heading p {
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.incident-reliability-grid h3 {
+  font-size: 12px;
+}
+
+.incident-reliability-kpis strong {
+  font-size: 16px;
+}
+
+.incident-reliability-grid strong {
+  font-size: 11px;
+}
+
+.incident-reliability-grid small,
+.incident-reliability-grid span,
+.incident-reliability-grid em,
+.incident-reliability-period small {
+  font-size: 10px;
+}

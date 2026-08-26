@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { requireOrganization } from "@/lib/authz";
 import { DiscoveryConsole } from "@/components/discovery/discovery-console";
+import { VirtualInfrastructurePanel } from "@/components/discovery/virtual-infrastructure-panel";
+import { FabricPanel } from "@/components/discovery/fabric-panel";
+import { MultiSiteTopologyPanel } from "@/components/discovery/multisite-topology-panel";
+import { DiscoveryAutomationPanel } from "@/components/discovery/discovery-automation-panel";
 
 export const metadata = {
   title: "Infrastructure Discovery | Portal Enterprise",
@@ -104,14 +108,20 @@ export default async function DiscoveryPage() {
 
   return (
     <>
-      <section className="portal-heading">
-        <span>Enterprise Discovery Center</span>
-        <h1>Infraestrutura real do Proxmox</h1>
-        <p>
-          Inventário operacional alimentado diretamente pelo PostgreSQL após a
-          descoberta da infraestrutura Proxmox.
-        </p>
+        <section className="discovery-ui-control">
+         <div>
+          <span>Real Infrastructure Discovery</span>
+          <h2>Sincronização operacional</h2>
+          <p>
+            A execução consulta o Proxmox, valida os Nodes, persiste os dados e
+            só conclui quando os registros são confirmados no PostgreSQL.
+          </p>
+        </div>
+
+        <DiscoveryConsole />
       </section>
+
+      <DiscoveryAutomationPanel />
 
       <section className="discovery-ui-kpis">
         <article>
@@ -157,6 +167,8 @@ export default async function DiscoveryPage() {
           </p>
         </div>
         <DiscoveryConsole />
+
+        <DiscoveryAutomationPanel />
       </section>
 
       <section className="discovery-ui-section">
@@ -255,6 +267,9 @@ export default async function DiscoveryPage() {
           ) : null}
         </div>
       </section>
-    </>
+          <VirtualInfrastructurePanel />
+      <FabricPanel />
+      <MultiSiteTopologyPanel />
+</>
   );
 }

@@ -7,22 +7,22 @@ datasource db {
 }
 
 model User {
-  id            String       @id @default(cuid())
+  id            String         @id @default(cuid())
   name          String?
-  email         String       @unique
+  email         String         @unique
   emailVerified DateTime?
   image         String?
   passwordHash  String?
-  active        Boolean      @default(true)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  active        Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   accounts      Account[]
   auditLogs     AuditLog[]
   memberships   Membership[]
   sessions      Session[]
-  ticketsOwned  Ticket[]     @relation("TicketAssignedTo")
-  ticketsOpened Ticket[]     @relation("TicketOpenedBy")
-  discoveryRuns       DiscoveryRun[]
+  ticketsOwned  Ticket[]       @relation("TicketAssignedTo")
+  ticketsOpened Ticket[]       @relation("TicketOpenedBy")
+  discoveryRuns DiscoveryRun[]
 }
 
 model Account {
@@ -60,25 +60,50 @@ model VerificationToken {
 }
 
 model Organization {
-  id                   String                @id @default(cuid())
-  name                 String
-  slug                 String                @unique
-  cns                  String?
-  active               Boolean               @default(true)
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  assets               Asset[]
-  auditLogs            AuditLog[]
-  backupJobs           BackupJob[]
-  contracts            Contract[]
-  drPlan               DisasterRecoveryPlan?
-  documents            Document[]
-  integrations         Integration[]
-  integrationResources IntegrationResource[]
-  memberships          Membership[]
-  tickets              Ticket[]
-  infrastructureAssets InfrastructureAsset[]
-  discoveryRuns       DiscoveryRun[]
+  id                                 String                              @id @default(cuid())
+  name                               String
+  slug                               String                              @unique
+  cns                                String?
+  active                             Boolean                             @default(true)
+  createdAt                          DateTime                            @default(now())
+  updatedAt                          DateTime                            @updatedAt
+  assets                             Asset[]
+  auditLogs                          AuditLog[]
+  backupJobs                         BackupJob[]
+  contracts                          Contract[]
+  drPlan                             DisasterRecoveryPlan?
+  documents                          Document[]
+  integrations                       Integration[]
+  integrationResources               IntegrationResource[]
+  memberships                        Membership[]
+  tickets                            Ticket[]
+  infrastructureAssets               InfrastructureAsset[]
+  discoveryRuns                      DiscoveryRun[]
+  proxmoxInstances                   ProxmoxInstance[]
+  infrastructureIncidents            InfrastructureIncident[]
+  infrastructureIncidentEvents       InfrastructureIncidentEvent[]
+  infrastructureIncidentNotes        InfrastructureIncidentNote[]
+  alertPolicies                      AlertPolicy[]
+  alertDeliveries                    AlertDelivery[]
+  notificationConnectors             NotificationConnector[]
+  notificationMaintenanceWindows     NotificationMaintenanceWindow[]
+  notificationAutomationConfig       NotificationAutomationConfig?
+  notificationAutomationRuns         NotificationAutomationRun[]
+  notificationSloSnapshots           NotificationSloSnapshot[]
+  notificationSloAutomationConfig    NotificationSloAutomationConfig?
+  notificationSloTrendAlerts         NotificationSloTrendAlert[]
+  notificationSloRetentionConfig     NotificationSloRetentionConfig?
+  discoveryAutomationConfig          DiscoveryAutomationConfig?
+  discoveryAutomationRuns            DiscoveryAutomationRun[]
+  incidentReconciliationRuns         IncidentReconciliationRun[]
+  incidentSlaEvaluationRuns          IncidentSlaEvaluationRun[]
+  incidentSlaEscalations             IncidentSlaEscalation[]
+  remediationExecutionPlans          RemediationExecutionPlan[]
+  remediationApprovals               RemediationApproval[]
+  remediationExecutionRuns           RemediationExecutionRun[]
+  remediationVerificationRuns        RemediationVerificationRun[]
+  remediationGovernanceEvaluations   RemediationGovernanceEvaluation[]
+  remediationExecutionAuthorizations RemediationExecutionAuthorization[]
 }
 
 model Membership {
@@ -217,27 +242,27 @@ model DisasterRecoveryPlan {
 }
 
 model Integration {
-  id             String                @id @default(cuid())
-  organizationId String
-  provider       String
-  name           String
-  enabled        Boolean               @default(true)
-  mode           String                @default("LIVE")
-  status         String                @default("PENDING")
-  config         Json?
-  lastSyncAt     DateTime?
-  lastHealthAt   DateTime?
-  lastError      String?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  resources      IntegrationResource[]
-  syncRuns       IntegrationSyncRun[]
+  id                   String                @id @default(cuid())
+  organizationId       String
+  provider             String
+  name                 String
+  enabled              Boolean               @default(true)
+  mode                 String                @default("LIVE")
+  status               String                @default("PENDING")
+  config               Json?
+  lastSyncAt           DateTime?
+  lastHealthAt         DateTime?
+  lastError            String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  resources            IntegrationResource[]
+  syncRuns             IntegrationSyncRun[]
+  infrastructureAssets InfrastructureAsset[]
+  discoveryRuns        DiscoveryRun[]
 
   @@unique([organizationId, provider])
   @@index([organizationId, status])
-  infrastructureAssets InfrastructureAsset[]
-  discoveryRuns       DiscoveryRun[]
 }
 
 model IntegrationResource {
@@ -336,29 +361,29 @@ model InfrastructureAsset {
 }
 
 model DiscoveryRun {
-  id             String       @id @default(cuid())
+  id             String         @id @default(cuid())
   organizationId String
   integrationId  String?
   userId         String?
   provider       String
   scope          String
-  status         String       @default("RUNNING")
+  status         String         @default("RUNNING")
   endpoint       String?
   version        String?
   clusterName    String?
-  startedAt      DateTime     @default(now())
+  startedAt      DateTime       @default(now())
   completedAt    DateTime?
   durationMs     Int?
-  discovered     Int          @default(0)
-  createdCount   Int          @default(0)
-  updatedCount   Int          @default(0)
-  unchangedCount Int          @default(0)
-  offlineCount   Int          @default(0)
+  discovered     Int            @default(0)
+  createdCount   Int            @default(0)
+  updatedCount   Int            @default(0)
+  unchangedCount Int            @default(0)
+  offlineCount   Int            @default(0)
   errorMessage   String?
   metadata       Json?
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  integration    Integration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
-  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  integration    Integration?   @relation(fields: [integrationId], references: [id], onDelete: SetNull)
+  user           User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
   logs           DiscoveryLog[]
 
   @@index([organizationId, startedAt])
@@ -366,15 +391,710 @@ model DiscoveryRun {
 }
 
 model DiscoveryLog {
-  id        String       @id @default(cuid())
-  runId     String
-  step      String
-  level     String       @default("INFO")
-  message   String
+  id         String       @id @default(cuid())
+  runId      String
+  step       String
+  level      String       @default("INFO")
+  message    String
   durationMs Int?
-  metadata  Json?
-  createdAt DateTime     @default(now())
-  run       DiscoveryRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  metadata   Json?
+  createdAt  DateTime     @default(now())
+  run        DiscoveryRun @relation(fields: [runId], references: [id], onDelete: Cascade)
 
   @@index([runId, createdAt])
+}
+
+model ProxmoxInstance {
+  id                   String       @id @default(cuid())
+  organizationId       String
+  slug                 String
+  name                 String
+  site                 String?
+  baseUrl              String
+  tokenId              String
+  tokenSecretEncrypted String       @db.Text
+  allowSelfSigned      Boolean      @default(true)
+  enabled              Boolean      @default(true)
+  status               String       @default("PENDING")
+  lastHealthAt         DateTime?
+  lastSyncAt           DateTime?
+  lastError            String?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, enabled])
+}
+
+model InfrastructureIncident {
+  id                                 String                              @id @default(cuid())
+  organizationId                     String
+  externalId                         String
+  title                              String
+  description                        String?
+  source                             String                              @default("HOIWORK")
+  status                             String                              @default("OPEN")
+  severity                           String
+  riskScore                          Int                                 @default(0)
+  assetExternalId                    String
+  assetName                          String
+  assetType                          String
+  instanceId                         String?
+  instanceName                       String?
+  site                               String?
+  blastRadius                        Int                                 @default(0)
+  fingerprint                        String
+  firstSeenAt                        DateTime                            @default(now())
+  lastSeenAt                         DateTime                            @default(now())
+  acknowledgedAt                     DateTime?
+  acknowledgedById                   String?
+  acknowledgedByName                 String?
+  assignedToId                       String?
+  assignedToName                     String?
+  assignedAt                         DateTime?
+  resolvedAt                         DateTime?
+  metadata                           Json?
+  createdAt                          DateTime                            @default(now())
+  updatedAt                          DateTime                            @updatedAt
+  organization                       Organization                        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  events                             InfrastructureIncidentEvent[]
+  notes                              InfrastructureIncidentNote[]
+  alertDeliveries                    AlertDelivery[]
+  slaEscalations                     IncidentSlaEscalation[]
+  remediationPlans                   RemediationExecutionPlan[]
+  remediationExecutionRuns           RemediationExecutionRun[]
+  remediationVerificationRuns        RemediationVerificationRun[]
+  remediationGovernanceEvaluations   RemediationGovernanceEvaluation[]
+  remediationExecutionAuthorizations RemediationExecutionAuthorization[]
+
+  @@unique([organizationId, fingerprint])
+  @@index([organizationId, status, severity])
+  @@index([organizationId, assetExternalId])
+  @@index([organizationId, assignedToId, status])
+  @@index([organizationId, acknowledgedAt])
+}
+
+model InfrastructureIncidentEvent {
+  id             String                 @id @default(cuid())
+  organizationId String
+  incidentId     String
+  eventType      String
+  message        String
+  actorUserId    String?
+  actorName      String?
+  fromStatus     String?
+  toStatus       String?
+  fromSeverity   String?
+  toSeverity     String?
+  metadata       Json?
+  createdAt      DateTime               @default(now())
+  incident       InfrastructureIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, incidentId, createdAt])
+}
+
+model InfrastructureIncidentNote {
+  id             String                 @id @default(cuid())
+  organizationId String
+  incidentId     String
+  authorUserId   String?
+  authorName     String?
+  body           String
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  incident       InfrastructureIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, incidentId, createdAt])
+}
+
+model AlertPolicy {
+  id                   String          @id @default(cuid())
+  organizationId       String
+  name                 String
+  enabled              Boolean         @default(true)
+  minSeverity          String          @default("HIGH")
+  channels             String[]
+  recipients           String[]
+  escalateAfterMinutes Int             @default(30)
+  repeatEveryMinutes   Int             @default(60)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  organization         Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deliveries           AlertDelivery[]
+
+  @@index([organizationId, enabled])
+}
+
+model AlertDelivery {
+  id             String                 @id @default(cuid())
+  organizationId String
+  incidentId     String
+  policyId       String?
+  channel        String
+  recipient      String
+  status         String                 @default("PENDING")
+  attempt        Int                    @default(1)
+  errorMessage   String?
+  payload        Json?
+  sentAt         DateTime?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  incident       InfrastructureIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  policy         AlertPolicy?           @relation(fields: [policyId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, incidentId, createdAt])
+  @@index([organizationId, status])
+}
+
+model NotificationConnector {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  type           String
+  mode           String       @default("SIMULATED")
+  enabled        Boolean      @default(true)
+  secretRef      String?
+  config         Json?
+  lastTestAt     DateTime?
+  lastTestStatus String?
+  lastError      String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, enabled, type])
+}
+
+model NotificationMaintenanceWindow {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  enabled        Boolean      @default(true)
+  startsAt       DateTime
+  endsAt         DateTime
+  reason         String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, enabled, startsAt, endsAt])
+}
+
+model NotificationAutomationConfig {
+  id              String       @id @default(cuid())
+  organizationId  String       @unique
+  enabled         Boolean      @default(false)
+  intervalMinutes Int          @default(5)
+  lastRunAt       DateTime?
+  lastSuccessAt   DateTime?
+  lastError       String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model NotificationAutomationRun {
+  id                  String       @id @default(cuid())
+  organizationId      String
+  source              String
+  status              String       @default("RUNNING")
+  startedAt           DateTime     @default(now())
+  finishedAt          DateTime?
+  durationMs          Int?
+  policiesEvaluated   Int          @default(0)
+  incidentsEvaluated  Int          @default(0)
+  alertsCreated       Int          @default(0)
+  escalationsCreated  Int          @default(0)
+  heldMaintenance     Int          @default(0)
+  heldCooldown        Int          @default(0)
+  released            Int          @default(0)
+  deliveriesProcessed Int          @default(0)
+  sent                Int          @default(0)
+  simulated           Int          @default(0)
+  retryPending        Int          @default(0)
+  failed              Int          @default(0)
+  errorMessage        String?
+  metadata            Json?
+  createdAt           DateTime     @default(now())
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, startedAt])
+  @@index([organizationId, status])
+}
+
+model NotificationSloSnapshot {
+  id                   String       @id @default(cuid())
+  organizationId       String
+  capturedAt           DateTime     @default(now())
+  overallState         String
+  nocHealthScore       Int?
+  burnState            String
+  deliverySuccess1h    Float?
+  deliverySuccess24h   Float?
+  deliverySuccess7d    Float?
+  retryRate1h          Float?
+  retryRate24h         Float?
+  retryRate7d          Float?
+  errorBudget1h        Float?
+  errorBudget24h       Float?
+  errorBudget7d        Float?
+  burnRate1h           Float?
+  burnRate24h          Float?
+  burnRate7d           Float?
+  connectorScore       Int?
+  automationSuccess24h Float?
+  metadata             Json?
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, capturedAt])
+  @@index([organizationId, overallState])
+}
+
+model NotificationSloAutomationConfig {
+  id               String       @id @default(cuid())
+  organizationId   String       @unique
+  enabled          Boolean      @default(false)
+  intervalMinutes  Int          @default(15)
+  nocDegradedBelow Int          @default(90)
+  nocCriticalBelow Int          @default(70)
+  burnDegradedAt   Float        @default(2)
+  burnCriticalAt   Float        @default(10)
+  lastRunAt        DateTime?
+  lastSuccessAt    DateTime?
+  lastError        String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model NotificationSloTrendAlert {
+  id             String       @id @default(cuid())
+  organizationId String
+  alertKey       String
+  alertType      String
+  severity       String
+  status         String       @default("OPEN")
+  title          String
+  message        String
+  metric         String
+  currentValue   Float?
+  threshold      Float?
+  firstSeenAt    DateTime     @default(now())
+  lastSeenAt     DateTime     @default(now())
+  resolvedAt     DateTime?
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, alertKey])
+  @@index([organizationId, status, severity])
+  @@index([organizationId, lastSeenAt])
+}
+
+model NotificationSloRetentionConfig {
+  id               String       @id @default(cuid())
+  organizationId   String       @unique
+  retentionDays    Int          @default(90)
+  enabled          Boolean      @default(true)
+  lastCleanupAt    DateTime?
+  lastDeletedCount Int          @default(0)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model DiscoveryAutomationConfig {
+  id                    String       @id @default(cuid())
+  organizationId        String       @unique
+  enabled               Boolean      @default(false)
+  intervalMinutes       Int          @default(5)
+  reconciliationEnabled Boolean      @default(false)
+  lastRunAt             DateTime?
+  lastSuccessAt         DateTime?
+  lastFailureAt         DateTime?
+  lastError             String?
+  consecutiveFailures   Int          @default(0)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model DiscoveryAutomationRun {
+  id               String       @id @default(cuid())
+  organizationId   String
+  source           String
+  status           String       @default("RUNNING")
+  startedAt        DateTime     @default(now())
+  finishedAt       DateTime?
+  durationMs       Int?
+  instancesTotal   Int          @default(0)
+  succeeded        Int          @default(0)
+  failed           Int          @default(0)
+  assetsDiscovered Int          @default(0)
+  errorMessage     String?
+  details          Json?
+  createdAt        DateTime     @default(now())
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, startedAt])
+  @@index([organizationId, status])
+}
+
+model IncidentReconciliationRun {
+  id                       String       @id @default(cuid())
+  organizationId           String
+  source                   String       @default("MANUAL")
+  discoveryAutomationRunId String?
+  status                   String       @default("RUNNING")
+  startedAt                DateTime     @default(now())
+  finishedAt               DateTime?
+  durationMs               Int?
+  inspected                Int          @default(0)
+  keptOpen                 Int          @default(0)
+  resolved                 Int          @default(0)
+  skipped                  Int          @default(0)
+  errors                   Int          @default(0)
+  errorMessage             String?
+  details                  Json?
+  organization             Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, startedAt])
+  @@index([organizationId, status])
+  @@index([organizationId, discoveryAutomationRunId])
+}
+
+model IncidentSlaEvaluationRun {
+  id                 String       @id @default(cuid())
+  organizationId     String
+  source             String       @default("MANUAL")
+  status             String       @default("RUNNING")
+  startedAt          DateTime     @default(now())
+  finishedAt         DateTime?
+  durationMs         Int?
+  inspected          Int          @default(0)
+  ackBreaches        Int          @default(0)
+  resolveBreaches    Int          @default(0)
+  escalationsCreated Int          @default(0)
+  skipped            Int          @default(0)
+  errors             Int          @default(0)
+  errorMessage       String?
+  details            Json?
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, startedAt])
+  @@index([organizationId, status])
+}
+
+model IncidentSlaEscalation {
+  id             String                 @id @default(cuid())
+  organizationId String
+  incidentId     String
+  breachType     String
+  severity       String
+  status         String                 @default("OPEN")
+  fingerprint    String
+  detectedAt     DateTime               @default(now())
+  clearedAt      DateTime?
+  metadata       Json?
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  incident       InfrastructureIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, fingerprint])
+  @@index([organizationId, status, breachType])
+  @@index([incidentId, detectedAt])
+}
+
+model RemediationExecutionPlan {
+  id                      String                              @id @default(cuid())
+  organizationId          String
+  incidentId              String
+  action                  String
+  safetyClass             String
+  status                  String                              @default("DRAFT")
+  rationale               String                              @db.Text
+  risk                    String
+  requiresApproval        Boolean                             @default(true)
+  executableNow           Boolean                             @default(false)
+  realExecutionEnabled    Boolean                             @default(false)
+  verificationPlan        Json?
+  rollbackPlan            Json?
+  blockers                Json?
+  evidence                Json?
+  createdById             String?
+  createdByName           String?
+  submittedAt             DateTime?
+  approvedAt              DateTime?
+  approvedById            String?
+  approvedByName          String?
+  rejectedAt              DateTime?
+  rejectedById            String?
+  rejectedByName          String?
+  rejectionReason         String?                             @db.Text
+  expiresAt               DateTime?
+  executedAt              DateTime?
+  createdAt               DateTime                            @default(now())
+  updatedAt               DateTime                            @updatedAt
+  organization            Organization                        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  incident                InfrastructureIncident              @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  approvals               RemediationApproval[]
+  executionRuns           RemediationExecutionRun[]
+  verificationRuns        RemediationVerificationRun[]
+  governanceEvaluations   RemediationGovernanceEvaluation[]
+  executionAuthorizations RemediationExecutionAuthorization[]
+
+  @@index([organizationId, status, createdAt])
+  @@index([incidentId, createdAt])
+}
+
+model RemediationApproval {
+  id             String                   @id @default(cuid())
+  organizationId String
+  planId         String
+  decision       String
+  actorUserId    String?
+  actorName      String?
+  reason         String?                  @db.Text
+  metadata       Json?
+  createdAt      DateTime                 @default(now())
+  organization   Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan           RemediationExecutionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, planId, createdAt])
+}
+
+model RemediationExecutionRun {
+  id               String                       @id @default(cuid())
+  organizationId   String
+  incidentId       String
+  planId           String
+  mode             String                       @default("SIMULATED")
+  status           String                       @default("RUNNING")
+  executor         String
+  request          Json?
+  preconditions    Json?
+  result           Json?
+  errorMessage     String?                      @db.Text
+  startedAt        DateTime                     @default(now())
+  finishedAt       DateTime?
+  durationMs       Int?
+  createdById      String?
+  createdByName    String?
+  createdAt        DateTime                     @default(now())
+  updatedAt        DateTime                     @updatedAt
+  organization     Organization                 @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  incident         InfrastructureIncident       @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  plan             RemediationExecutionPlan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  verificationRuns RemediationVerificationRun[]
+
+  @@index([organizationId, status, startedAt])
+  @@index([incidentId, startedAt])
+  @@index([planId, startedAt])
+}
+
+model RemediationVerificationRun {
+  id                 String                   @id @default(cuid())
+  organizationId     String
+  incidentId         String
+  planId             String
+  executionRunId     String?
+  mode               String                   @default("SIMULATED")
+  status             String                   @default("RUNNING")
+  verificationState  String                   @default("PENDING")
+  rollbackReadiness  String                   @default("UNKNOWN")
+  expectedState      String?
+  observedState      String?
+  evidence           Json?
+  checks             Json?
+  rollbackAssessment Json?
+  errorMessage       String?                  @db.Text
+  startedAt          DateTime                 @default(now())
+  finishedAt         DateTime?
+  durationMs         Int?
+  createdById        String?
+  createdByName      String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  organization       Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  incident           InfrastructureIncident   @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  plan               RemediationExecutionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  executionRun       RemediationExecutionRun? @relation(fields: [executionRunId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status, startedAt])
+  @@index([incidentId, startedAt])
+  @@index([planId, startedAt])
+  @@index([executionRunId])
+}
+
+model RemediationGovernanceEvaluation {
+  id                        String                              @id @default(cuid())
+  organizationId            String
+  incidentId                String
+  planId                    String
+  decision                  String
+  policyVersion             String                              @default("015.6.11.6.1")
+  eligibleForRealExecution  Boolean                             @default(false)
+  realExecutionStillBlocked Boolean                             @default(true)
+  checks                    Json?
+  blockers                  Json?
+  warnings                  Json?
+  targetAssessment          Json?
+  approvalAssessment        Json?
+  maintenanceAssessment     Json?
+  concurrencyAssessment     Json?
+  circuitBreakerAssessment  Json?
+  killSwitchAssessment      Json?
+  evaluatedById             String?
+  evaluatedByName           String?
+  evaluatedAt               DateTime                            @default(now())
+  createdAt                 DateTime                            @default(now())
+  organization              Organization                        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  incident                  InfrastructureIncident              @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  plan                      RemediationExecutionPlan            @relation(fields: [planId], references: [id], onDelete: Cascade)
+  executionAuthorizations   RemediationExecutionAuthorization[]
+
+  @@index([organizationId, decision, evaluatedAt])
+  @@index([incidentId, evaluatedAt])
+  @@index([planId, evaluatedAt])
+}
+
+model RemediationExecutionAuthorization {
+  id                 String                          @id @default(cuid())
+  organizationId     String
+  incidentId         String
+  planId             String
+  governanceId       String
+  status             String                          @default("AUTHORIZED")
+  tokenHash          String                          @unique
+  bindingFingerprint String                          @unique
+  action             String
+  assetExternalId    String
+  assetName          String
+  nodeName           String?
+  issuedAt           DateTime                        @default(now())
+  expiresAt          DateTime
+  consumedAt         DateTime?
+  revokedAt          DateTime?
+  revokedById        String?
+  revokedByName      String?
+  revokeReason       String?                         @db.Text
+  issuedById         String?
+  issuedByName       String?
+  preflight          Json?
+  metadata           Json?
+  createdAt          DateTime                        @default(now())
+  updatedAt          DateTime                        @updatedAt
+  organization       Organization                    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  incident           InfrastructureIncident          @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  plan               RemediationExecutionPlan        @relation(fields: [planId], references: [id], onDelete: Cascade)
+  governance         RemediationGovernanceEvaluation @relation(fields: [governanceId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status, expiresAt])
+  @@index([incidentId, issuedAt])
+  @@index([planId, issuedAt])
+}
+
+model ControlPlaneHealthSnapshot {
+  id                      String   @id @default(cuid())
+  organizationId          String
+  capturedAt              DateTime @default(now())
+  overallState            String
+  overallScore            Int?
+  confidence              String
+  discoveryState          String
+  proxmoxState            String
+  reconciliationState     String
+  incidentAutomationState String
+  notificationsState      String
+  sloState                String
+  rootCauseCount          Int      @default(0)
+  blockedCapabilityCount  Int      @default(0)
+  metadata                Json?
+
+  @@index([organizationId, capturedAt])
+  @@index([organizationId, overallState])
+}
+
+model ControlPlaneSloPolicy {
+  id                      String    @id @default(cuid())
+  organizationId          String    @unique
+  enabled                 Boolean   @default(false)
+  availabilityTarget      Float     @default(99.5)
+  degradedWeight          Float     @default(0.5)
+  criticalWeight          Float     @default(0)
+  snapshotIntervalMinutes Int       @default(5)
+  retentionDays           Int       @default(90)
+  lastRunAt               DateTime?
+  lastSuccessAt           DateTime?
+  lastFailureAt           DateTime?
+  lastError               String?
+  consecutiveFailures     Int       @default(0)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+}
+
+model ControlPlaneSloAutomationRun {
+  id                 String    @id @default(cuid())
+  organizationId     String
+  source             String
+  status             String    @default("RUNNING")
+  startedAt          DateTime  @default(now())
+  finishedAt         DateTime?
+  durationMs         Int?
+  snapshotId         String?
+  availability       Float?
+  errorBudgetPercent Float?
+  burnRate           Float?
+  burnState          String?
+  errorMessage       String?
+  metadata           Json?
+
+  @@index([organizationId, startedAt])
+  @@index([organizationId, status])
+}
+
+model AutonomousCapabilityGovernanceState {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  capability            String
+  candidateDecision     String
+  effectiveDecision     String
+  consecutiveAuthorized Int       @default(0)
+  consecutiveRestricted Int       @default(0)
+  consecutiveBlocked    Int       @default(0)
+  lastEvaluatedAt       DateTime  @default(now())
+  lastCandidateAt       DateTime  @default(now())
+  lastTransitionAt      DateTime?
+  recoveredAt           DateTime?
+  reasons               Json?
+  evidence              Json?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([organizationId, capability])
+  @@index([organizationId, effectiveDecision])
+  @@index([organizationId, lastEvaluatedAt])
+}
+
+model AutonomousGovernanceAudit {
+  id                String   @id @default(cuid())
+  organizationId    String
+  capability        String
+  source            String
+  eventType         String
+  candidateDecision String
+  previousDecision  String?
+  effectiveDecision String
+  changed           Boolean  @default(false)
+  reasons           Json?
+  metadata          Json?
+  createdAt         DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, capability, createdAt])
+  @@index([organizationId, eventType])
 }
