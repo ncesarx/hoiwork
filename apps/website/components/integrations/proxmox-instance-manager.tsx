@@ -104,6 +104,54 @@ export function ProxmoxInstanceManager({
     }
   }
 
+  async function removeInstance(instance: Instance) {
+    const confirmed = window.confirm(
+      `Remover a instância "${instance.name}"?\n\n` +
+      `${instance.baseUrl}\n\n` +
+      "O cadastro e as credenciais desta instância serão removidos do Integration Registry. " +
+      "Esta ação não pode ser desfeita.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setBusy(`delete:${instance.id}`);
+    setMessage("");
+
+    try {
+      const response = await fetch(
+        `/api/integrations/proxmox/instances/${instance.id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+          headers: { Accept: "application/json" },
+          cache: "no-store",
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || data.ok === false) {
+        throw new Error(data.error ?? `HTTP ${response.status}`);
+      }
+
+      setMessage(
+        data.message ?? `Instância "${instance.name}" removida com sucesso.`,
+      );
+
+      router.refresh();
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Erro ao remover instância Proxmox.",
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <div className="multi-proxmox-manager">
       <section className="multi-proxmox-form">
@@ -235,6 +283,15 @@ export function ProxmoxInstanceManager({
                   disabled={busy !== null}
                 >
                   {busy === `discover:${instance.id}` ? "Descobrindo..." : "Discovery completo"}
+                </button>
+
+                <button
+                  type="button"
+                  className="is-danger"
+                  onClick={() => removeInstance(instance)}
+                  disabled={busy !== null}
+                >
+                  {busy === `delete:${instance.id}` ? "Removendo..." : "Remover"}
                 </button>
               </div>
             </article>

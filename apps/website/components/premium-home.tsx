@@ -22,7 +22,7 @@ const stats = [["+150", "Clientes atendidos"],["+390", "Servidores gerenciados"]
 export function PremiumHome() {
   return <div className="site">
     <header className="navbar"><div className="container navbar__inner">
-      <a href="#inicio" className="brand" aria-label="Home & Office Tech Solutions"><Image src="/brand/logo-original.jpg" alt="Home & Office Tech Solutions" width={346} height={90} priority /></a>
+      <a href="#inicio" className="brand" aria-label="Home & Office Tech Solutions"><Image src="/brand/logo-premium.png" alt="Home & Office Tech Solutions" width={346} height={90} priority /></a>
       <nav className="navlinks" aria-label="Navegação principal"><a href="#empresa">Empresa</a><a href="#solucoes">Soluções</a><a href="#cartorios">Cartórios</a><a href="#arquitetura">Arquitetura</a><a href="#contato">Contato</a></nav>
       <a className="button button--outline navbar__cta" href="#contato">Fale com especialista <span>→</span></a>
     </div></header>
