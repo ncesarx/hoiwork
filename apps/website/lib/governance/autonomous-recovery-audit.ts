@@ -253,21 +253,53 @@ export async function reconcileAutonomousGovernanceState(input: {
 export async function getAutonomousGovernanceStatus(
   organizationId: string,
 ) {
-  const [states, audit] = await Promise.all([
-    prisma.autonomousCapabilityGovernanceState.findMany({
-      where: { organizationId },
-      orderBy: { capability: "asc" },
-    }),
-    prisma.autonomousGovernanceAudit.findMany({
-      where: { organizationId },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    }),
-  ]);
+  const [states, audit, automationConfig, automationRuns] =
+    await Promise.all([
+      prisma.autonomousCapabilityGovernanceState.findMany({
+        where: { organizationId },
+        orderBy: { capability: "asc" },
+      }),
+      prisma.autonomousGovernanceAudit.findMany({
+        where: { organizationId },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      }),
+      prisma.autonomousGovernanceAutomationConfig.findUnique({
+        where: { organizationId },
+      }),
+      prisma.autonomousGovernanceAutomationRun.findMany({
+        where: { organizationId },
+        orderBy: { startedAt: "desc" },
+        take: 20,
+      }),
+    ]);
+
+  const lastRun = automationRuns[0] ?? null;
+
+  const automationHealth =
+    !automationConfig
+      ? "NOT_CONFIGURED"
+      : !automationConfig.enabled
+        ? "DISABLED"
+        : automationConfig.consecutiveFailures > 0 ||
+            lastRun?.status === "FAILED"
+          ? "DEGRADED"
+          : automationConfig.lastSuccessAt
+            ? "HEALTHY"
+            : "PENDING";
 
   return {
-    version: "015.6.11.7.4.4",
+    version: "015.6.11.7.5.3",
     states,
     audit,
+    automation: {
+      health: automationHealth,
+      currentMode: automationConfig?.commitEnabled
+        ? "COMMIT"
+        : "DRY_RUN",
+      config: automationConfig,
+      lastRun,
+      runs: automationRuns,
+    },
   };
 }

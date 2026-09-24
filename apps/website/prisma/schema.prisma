@@ -1098,3 +1098,42 @@ model AutonomousGovernanceAudit {
   @@index([organizationId, capability, createdAt])
   @@index([organizationId, eventType])
 }
+
+model AutonomousGovernanceAutomationConfig {
+  id                  String    @id @default(cuid())
+  organizationId      String    @unique
+  enabled             Boolean   @default(false)
+  intervalMinutes     Int       @default(5)
+  commitEnabled       Boolean   @default(false)
+  lastRunAt           DateTime?
+  lastSuccessAt       DateTime?
+  lastFailureAt       DateTime?
+  lastError           String?
+  consecutiveFailures Int       @default(0)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([enabled])
+}
+
+model AutonomousGovernanceAutomationRun {
+  id             String    @id @default(cuid())
+  organizationId String
+  source         String
+  mode           String
+  status         String    @default("RUNNING")
+  startedAt      DateTime  @default(now())
+  finishedAt     DateTime?
+  durationMs     Int?
+  capabilities   Int       @default(0)
+  changed        Int       @default(0)
+  authorized     Int       @default(0)
+  restricted     Int       @default(0)
+  blocked        Int       @default(0)
+  errorMessage   String?
+  metadata       Json?
+  createdAt      DateTime  @default(now())
+
+  @@index([organizationId, startedAt])
+  @@index([organizationId, status])
+}
