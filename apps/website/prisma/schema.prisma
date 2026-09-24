@@ -1137,3 +1137,18 @@ model AutonomousGovernanceAutomationRun {
   @@index([organizationId, startedAt])
   @@index([organizationId, status])
 }
+
+model AutonomousGovernanceAutomationConfigChange {
+  id                      String   @id @default(cuid())
+  organizationId          String
+  actorUserId             String
+  previousEnabled         Boolean
+  enabled                 Boolean
+  previousIntervalMinutes Int
+  intervalMinutes         Int
+  previousCommitEnabled   Boolean
+  commitEnabled           Boolean
+  createdAt               DateTime @default(now())
+
+  @@index([organizationId, createdAt], map: "AGAutomationConfigChange_org_created_idx")
+}

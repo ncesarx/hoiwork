@@ -21,3 +21,13 @@
 .autonomous-governance-history th{color:#aab8c0;font-weight:600}
 @media(max-width:800px){.autonomous-governance-heading{flex-direction:column}.autonomous-governance-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.autonomous-governance-metrics{grid-template-columns:1fr}}
+.autonomous-governance-config{margin:20px 0;padding:16px;border:1px solid var(--line);border-radius:10px;background:#ffffff06}
+.autonomous-governance-config h3{margin:0 0 4px;font-size:17px}
+.autonomous-governance-config p{margin:0 0 12px;color:#aab8c0;font-size:13px}
+.autonomous-governance-config-fields{display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+.autonomous-governance-config-fields label{display:grid;gap:6px;min-width:150px}
+.autonomous-governance-config-fields span{font-size:12px;color:#aab8c0}
+.autonomous-governance-config-fields select,.autonomous-governance-config-fields input{min-height:42px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:#041119;color:#e5ecef;font-size:14px}
+.autonomous-governance-config-fields button{min-height:42px;padding:0 15px;border:1px solid #d4a01770;border-radius:8px;background:#0b2735;color:#f2c45a;font-weight:700;cursor:pointer}
+.autonomous-governance-config-fields button:disabled{opacity:.55;cursor:wait}
+.autonomous-governance-config p[role="status"]{margin:12px 0 0;color:#b9e8bf}

@@ -1,5 +1,7 @@
 import { requireOrganization } from "@/lib/authz";
 import { getAutonomousGovernanceStatus } from "@/lib/governance/autonomous-recovery-audit";
+import { prisma } from "@/lib/prisma";
+import { AutonomousGovernanceConfigForm } from "./autonomous-governance-config-form";
 import { AutonomousGovernanceRunButton } from "./autonomous-governance-run-button";
 
 function utc(value: Date | null) {
@@ -13,6 +15,21 @@ export async function AutonomousGovernancePanel() {
   const { automation } = await getAutonomousGovernanceStatus(organization.id);
   const config = automation.config;
   const canRun = ["ADMIN", "TECHNICIAN"].includes(session.user.role);
+  const isAdmin = session.user.role === "ADMIN";
+  const changes = isAdmin
+    ? await prisma.autonomousGovernanceAutomationConfigChange.findMany({
+        where: { organizationId: organization.id },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      })
+    : [];
+  const actors = changes.length
+    ? await prisma.user.findMany({
+        where: { id: { in: changes.map((change) => change.actorUserId) } },
+        select: { id: true, name: true, email: true },
+      })
+    : [];
+  const actorNames = new Map(actors.map((actor) => [actor.id, actor.name ?? actor.email]));
 
   return (
     <section className="autonomous-governance-panel" aria-labelledby="autonomous-governance-title">
@@ -37,6 +54,34 @@ export async function AutonomousGovernancePanel() {
       ) : null}
 
       {canRun ? <AutonomousGovernanceRunButton /> : null}
+
+      {isAdmin ? (
+        <AutonomousGovernanceConfigForm
+          enabled={config?.enabled ?? false}
+          intervalMinutes={config?.intervalMinutes ?? 5}
+        />
+      ) : null}
+
+      {isAdmin && changes.length ? (
+        <div className="autonomous-governance-history">
+          <h3>Alterações de configuração</h3>
+          <div className="autonomous-governance-table-wrap">
+            <table>
+              <thead><tr><th>Data (UTC)</th><th>ADMIN</th><th>Scheduler</th><th>Intervalo</th></tr></thead>
+              <tbody>
+                {changes.map((change) => (
+                  <tr key={change.id}>
+                    <td>{utc(change.createdAt)}</td>
+                    <td>{actorNames.get(change.actorUserId) ?? change.actorUserId}</td>
+                    <td>{change.previousEnabled ? "Ativo" : "Inativo"} → {change.enabled ? "Ativo" : "Inativo"}</td>
+                    <td>{change.previousIntervalMinutes} → {change.intervalMinutes} min</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
 
       <div className="autonomous-governance-history">
         <h3>Últimas execuções</h3>
