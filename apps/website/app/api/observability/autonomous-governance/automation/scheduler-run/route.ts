@@ -42,6 +42,7 @@ export async function POST(request: Request) {
     });
 
   const results = [];
+  let failures = 0;
 
   for (const config of configs) {
     try {
@@ -57,21 +58,27 @@ export async function POST(request: Request) {
         ...result,
       });
     } catch (error) {
+      failures += 1;
+      console.error("Autonomous Governance Scheduler falhou", {
+        organizationId: config.organizationId,
+        errorType: error instanceof Error ? error.name : "UnknownError",
+      });
       results.push({
         organizationId: config.organizationId,
         skipped: false,
         status: "FAILED",
-        error:
-          error instanceof Error
-            ? error.message
-            : "Falha desconhecida no Autonomous Governance Scheduler.",
+        error: "Falha na execução do scheduler. Consulte os logs do HOIWORK.",
       });
     }
   }
 
-  return NextResponse.json({
-    ok: true,
-    organizations: configs.length,
-    results,
-  });
+  return NextResponse.json(
+    {
+      ok: failures === 0,
+      organizations: configs.length,
+      failures,
+      results,
+    },
+    { status: failures > 0 ? 500 : 200 },
+  );
 }

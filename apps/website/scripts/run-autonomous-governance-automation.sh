@@ -21,7 +21,7 @@ if [ -z "$SECRET" ]; then
 fi
 
 curl \
-  --fail \
+  --fail-with-body \
   --silent \
   --show-error \
   --max-time 120 \
