@@ -276,6 +276,14 @@ export async function getAutonomousGovernanceStatus(
 
   const lastRun = automationRuns[0] ?? null;
 
+  const lastActivityAt = automationConfig?.lastRunAt ?? automationConfig?.createdAt;
+  const overdue = Boolean(
+    automationConfig?.enabled &&
+      lastActivityAt &&
+      Date.now() - lastActivityAt.getTime() >
+        Math.max(automationConfig.intervalMinutes, 5) * 2 * 60_000,
+  );
+
   const automationHealth =
     !automationConfig
       ? "NOT_CONFIGURED"
@@ -284,6 +292,8 @@ export async function getAutonomousGovernanceStatus(
         : automationConfig.consecutiveFailures > 0 ||
             lastRun?.status === "FAILED"
           ? "DEGRADED"
+          : overdue
+            ? "OVERDUE"
           : automationConfig.lastSuccessAt
             ? "HEALTHY"
             : "PENDING";
@@ -294,6 +304,7 @@ export async function getAutonomousGovernanceStatus(
     audit,
     automation: {
       health: automationHealth,
+      overdue,
       currentMode: automationConfig?.commitEnabled
         ? "COMMIT"
         : "DRY_RUN",

@@ -53,6 +53,12 @@ export async function AutonomousGovernancePanel() {
         <p className="autonomous-governance-error" role="alert">Última falha: {config.lastError}</p>
       ) : null}
 
+      {automation.overdue ? (
+        <p className="autonomous-governance-error" role="alert">
+          Scheduler atrasado: nenhuma execução registrada há mais de dois intervalos. Verifique o agendamento e os logs do HOIWORK.
+        </p>
+      ) : null}
+
       {canRun ? <AutonomousGovernanceRunButton /> : null}
 
       {isAdmin ? (
