@@ -55,6 +55,7 @@ export async function runAutonomousGovernanceAutomation(input: {
   organizationId: string;
   source: AutonomousGovernanceAutomationSource;
   respectEnabled?: boolean;
+  dryRunOnly?: boolean;
 }) {
   const config =
     await prisma.autonomousGovernanceAutomationConfig.upsert({
@@ -119,7 +120,8 @@ export async function runAutonomousGovernanceAutomation(input: {
 
         const startedAt = new Date();
 
-        const mode = lockedConfig.commitEnabled
+        const commit = lockedConfig.commitEnabled && !input.dryRunOnly;
+        const mode = commit
           ? "COMMIT"
           : "DRY_RUN";
 
@@ -140,7 +142,7 @@ export async function runAutonomousGovernanceAutomation(input: {
           await reconcileAutonomousGovernanceState({
             organizationId: input.organizationId,
             source: input.source,
-            commit: lockedConfig.commitEnabled,
+            commit,
           });
 
         const capabilities =

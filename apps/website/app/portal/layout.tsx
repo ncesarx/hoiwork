@@ -25,6 +25,7 @@ import "./observabilidade/slo-trend.css";
 import "./observabilidade/slo-automation.css";
 import "./observabilidade/slo-reporting.css";
 import "./observabilidade/retention-governance.css";
+import "./observabilidade/autonomous-governance.css";
 import "./executive-cockpit.css";
 import "./cockpit/site-health.css";
 import "./discovery/discovery-automation.css";

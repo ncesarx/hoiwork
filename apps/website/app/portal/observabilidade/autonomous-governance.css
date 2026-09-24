@@ -1,0 +1,23 @@
+.autonomous-governance-panel{margin:20px 0;padding:24px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#0a202d,#041018);color:#e5ecef}
+.autonomous-governance-heading{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+.autonomous-governance-heading span{font-size:12px;color:var(--gold2);text-transform:uppercase;letter-spacing:.08em}
+.autonomous-governance-heading h2{margin:6px 0;font-size:22px}
+.autonomous-governance-heading p,.autonomous-governance-history>p{margin:0;color:#aab8c0;font-size:14px}
+.autonomous-governance-mode{padding:8px 12px;border:1px solid #d4a01770;border-radius:8px;color:#f2c45a;font-size:14px}
+.autonomous-governance-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
+.autonomous-governance-metrics article{display:grid;gap:8px;padding:15px;border:1px solid var(--line);border-radius:10px;background:#ffffff06}
+.autonomous-governance-metrics span{color:#aab8c0;font-size:12px}
+.autonomous-governance-metrics strong{font-size:15px;overflow-wrap:anywhere}
+.autonomous-governance-error{padding:12px;border:1px solid #ff676755;border-radius:8px;color:#ff9b9b;font-size:14px}
+.autonomous-governance-action{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:16px 0}
+.autonomous-governance-action button{min-height:42px;padding:0 15px;border:0;border-radius:9px;background:linear-gradient(135deg,var(--gold2),#cc8300);color:#07131d;font-weight:800;cursor:pointer}
+.autonomous-governance-action button:disabled{opacity:.55;cursor:wait}
+.autonomous-governance-action p{margin:0;color:#b9e8bf;font-size:14px}
+.autonomous-governance-history{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}
+.autonomous-governance-history h3{margin:0 0 12px;font-size:17px}
+.autonomous-governance-table-wrap{overflow-x:auto}
+.autonomous-governance-history table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}
+.autonomous-governance-history th,.autonomous-governance-history td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.autonomous-governance-history th{color:#aab8c0;font-weight:600}
+@media(max-width:800px){.autonomous-governance-heading{flex-direction:column}.autonomous-governance-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.autonomous-governance-metrics{grid-template-columns:1fr}}

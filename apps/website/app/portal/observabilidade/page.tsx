@@ -5,6 +5,7 @@ import { SloSnapshotCaptureButton } from "@/components/observability/slo-snapsho
 import { SloAutomationPanel } from "@/components/observability/slo-automation-panel";
 import { SloReportingPanel } from "@/components/observability/slo-reporting-panel";
 import { RetentionGovernancePanel } from "@/components/observability/retention-governance-panel";
+import { AutonomousGovernancePanel } from "@/components/observability/autonomous-governance-panel";
 
 export const metadata = {
   title: "Notification Observability | Portal Enterprise",
@@ -39,6 +40,8 @@ export default function ObservabilityPage() {
       <SloReportingPanel />
 
       <RetentionGovernancePanel />
+
+      <AutonomousGovernancePanel />
     </>
   );
 }
