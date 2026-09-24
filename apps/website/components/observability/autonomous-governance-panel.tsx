@@ -47,6 +47,7 @@ export async function AutonomousGovernancePanel() {
         <article><span>Scheduler</span><strong>{config?.enabled ? "Ativo" : "Inativo"}</strong></article>
         <article><span>Intervalo</span><strong>{config?.intervalMinutes ?? 5} min</strong></article>
         <article><span>Último sucesso</span><strong>{utc(config?.lastSuccessAt ?? null)}</strong></article>
+        <article><span>Último scheduler</span><strong>{utc(automation.lastSchedulerRunAt)}</strong></article>
       </div>
 
       {config?.lastError ? (

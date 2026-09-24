@@ -253,7 +253,7 @@ export async function reconcileAutonomousGovernanceState(input: {
 export async function getAutonomousGovernanceStatus(
   organizationId: string,
 ) {
-  const [states, audit, automationConfig, automationRuns] =
+  const [states, audit, automationConfig, automationRuns, lastSchedulerRun, latestConfigChange] =
     await Promise.all([
       prisma.autonomousCapabilityGovernanceState.findMany({
         where: { organizationId },
@@ -272,11 +272,25 @@ export async function getAutonomousGovernanceStatus(
         orderBy: { startedAt: "desc" },
         take: 20,
       }),
+      prisma.autonomousGovernanceAutomationRun.findFirst({
+        where: { organizationId, source: "SCHEDULER" },
+        orderBy: { startedAt: "desc" },
+        select: { startedAt: true },
+      }),
+      prisma.autonomousGovernanceAutomationConfigChange.findFirst({
+        where: { organizationId },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
+      }),
     ]);
 
   const lastRun = automationRuns[0] ?? null;
 
-  const lastActivityAt = automationConfig?.lastRunAt ?? automationConfig?.createdAt;
+  const enabledSince = latestConfigChange?.createdAt ?? automationConfig?.createdAt;
+  const lastActivityAt = lastSchedulerRun?.startedAt && enabledSince &&
+    lastSchedulerRun.startedAt > enabledSince
+    ? lastSchedulerRun.startedAt
+    : enabledSince;
   const overdue = Boolean(
     automationConfig?.enabled &&
       lastActivityAt &&
@@ -305,6 +319,7 @@ export async function getAutonomousGovernanceStatus(
     automation: {
       health: automationHealth,
       overdue,
+      lastSchedulerRunAt: lastSchedulerRun?.startedAt ?? null,
       currentMode: automationConfig?.commitEnabled
         ? "COMMIT"
         : "DRY_RUN",
