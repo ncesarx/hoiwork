@@ -51,6 +51,7 @@ export async function POST(request: Request) {
           organizationId: config.organizationId,
           source: "SCHEDULER",
           respectEnabled: true,
+          dryRunOnly: true,
         });
 
       results.push({
