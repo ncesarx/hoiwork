@@ -1,0 +1,12 @@
+[Unit]
+Description=Check HOIWORK Autonomous Governance every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=15s
+Persistent=true
+Unit=hoiwork-autonomous-governance-automation.service
+
+[Install]
+WantedBy=timers.target
+

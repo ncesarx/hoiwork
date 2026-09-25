@@ -1,0 +1,15 @@
+[Unit]
+Description=HOIWORK Autonomous Governance scheduler
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ncesarx
+Group=ncesarx
+WorkingDirectory=/home/ncesarx/hoiwork/apps/website
+ExecStart=/usr/bin/bash /home/ncesarx/hoiwork/apps/website/scripts/run-autonomous-governance-automation.sh
+TimeoutStartSec=150s
+UMask=0077
+NoNewPrivileges=true
+
