@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function MultiProxmoxPage() {
-  const { organization } = await requireOrganization();
+  const { session, organization } = await requireOrganization();
 
   const instances = await prisma.proxmoxInstance.findMany({
     where: { organizationId: organization.id },
@@ -56,7 +56,7 @@ export default async function MultiProxmoxPage() {
         legacyAvailable={Boolean(process.env.PROXMOX_BASE_URL && process.env.PROXMOX_TOKEN_ID && process.env.PROXMOX_TOKEN_SECRET)}
       />
 
-      <ProxmoxInstanceManager instances={safeInstances} />
+      <ProxmoxInstanceManager instances={safeInstances} canRotateCredentials={session.user.role === "ADMIN"} />
     </>
   );
 }

@@ -19,12 +19,16 @@ type Instance = {
 
 export function ProxmoxInstanceManager({
   instances,
+  canRotateCredentials = false,
 }: {
   instances: Instance[];
+  canRotateCredentials?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [credentialEditId, setCredentialEditId] = useState<string | null>(null);
+  const [credentialForm, setCredentialForm] = useState({ tokenId: "", tokenSecret: "" });
   const [form, setForm] = useState({
     name: "",
     site: "",
@@ -100,6 +104,52 @@ export function ProxmoxInstanceManager({
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Erro inesperado.");
     } finally {
+      setBusy(null);
+    }
+  }
+
+
+  function toggleCredentials(instance: Instance) {
+    setMessage("");
+    if (credentialEditId === instance.id) {
+      setCredentialEditId(null);
+      setCredentialForm({ tokenId: "", tokenSecret: "" });
+    } else {
+      setCredentialEditId(instance.id);
+      setCredentialForm({ tokenId: instance.tokenId, tokenSecret: "" });
+    }
+  }
+
+  async function rotateCredentials(instance: Instance) {
+    if (!credentialForm.tokenId.trim() || !credentialForm.tokenSecret.trim()) {
+      setMessage("Informe Token ID e o novo Token Secret.");
+      return;
+    }
+
+    setBusy(`credentials:${instance.id}`);
+    setMessage("");
+    try {
+      const response = await fetch(
+        `/api/integrations/proxmox/instances/${instance.id}/credentials`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          cache: "no-store",
+          body: JSON.stringify(credentialForm),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok || data.ok === false) {
+        throw new Error(data.error ?? `HTTP ${response.status}`);
+      }
+      setMessage(`Token validado e salvo para "${instance.name}" (${data.nodeCount} node(s)).`);
+      setCredentialEditId(null);
+      router.refresh();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Falha ao atualizar credenciais.");
+    } finally {
+      setCredentialForm((previous) => ({ ...previous, tokenSecret: "" }));
       setBusy(null);
     }
   }
@@ -285,6 +335,16 @@ export function ProxmoxInstanceManager({
                   {busy === `discover:${instance.id}` ? "Descobrindo..." : "Discovery completo"}
                 </button>
 
+                {canRotateCredentials ? (
+                  <button
+                    type="button"
+                    onClick={() => toggleCredentials(instance)}
+                    disabled={busy !== null}
+                  >
+                    {credentialEditId === instance.id ? "Cancelar troca" : "Trocar token"}
+                  </button>
+                ) : null}
+
                 <button
                   type="button"
                   className="is-danger"
@@ -294,6 +354,38 @@ export function ProxmoxInstanceManager({
                   {busy === `delete:${instance.id}` ? "Removendo..." : "Remover"}
                 </button>
               </div>
+
+              {canRotateCredentials && credentialEditId === instance.id ? (
+                <div className="multi-proxmox-credential-form">
+                  <p>O novo token será testado antes de substituir o atual. O Token Secret não é exibido após salvar.</p>
+                  <label>
+                    <span>Token ID</span>
+                    <input
+                      value={credentialForm.tokenId}
+                      onChange={(event) => setCredentialForm({ ...credentialForm, tokenId: event.target.value })}
+                      disabled={busy !== null}
+                      autoComplete="off"
+                    />
+                  </label>
+                  <label>
+                    <span>Novo Token Secret</span>
+                    <input
+                      type="password"
+                      value={credentialForm.tokenSecret}
+                      onChange={(event) => setCredentialForm({ ...credentialForm, tokenSecret: event.target.value })}
+                      disabled={busy !== null}
+                      autoComplete="new-password"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => rotateCredentials(instance)}
+                    disabled={busy !== null || !credentialForm.tokenId.trim() || !credentialForm.tokenSecret.trim()}
+                  >
+                    {busy === `credentials:${instance.id}` ? "Validando..." : "Validar e salvar token"}
+                  </button>
+                </div>
+              ) : null}
             </article>
           ))}
 
