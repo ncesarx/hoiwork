@@ -31,3 +31,4 @@
 .autonomous-governance-config-fields button{min-height:42px;padding:0 15px;border:1px solid #d4a01770;border-radius:8px;background:#0b2735;color:#f2c45a;font-weight:700;cursor:pointer}
 .autonomous-governance-config-fields button:disabled{opacity:.55;cursor:wait}
 .autonomous-governance-config p[role="status"]{margin:12px 0 0;color:#b9e8bf}
+.autonomous-governance-history td.autonomous-governance-reasons{min-width:280px;max-width:600px;white-space:normal;overflow-wrap:anywhere}

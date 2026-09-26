@@ -196,6 +196,12 @@ export async function runAutonomousGovernanceAutomation(input: {
                 reconciliation.asymmetricHysteresis,
               recoveryEligible:
                 reconciliation.recentRecovery.eligible,
+              capabilityDecisions: reconciliation.actions.map((action) => ({
+                capability: action.capability,
+                candidateDecision: action.candidateDecision,
+                effectiveDecision: action.effectiveDecision,
+                reasons: action.reasons,
+              })),
             } as Prisma.InputJsonValue,
           },
         });
