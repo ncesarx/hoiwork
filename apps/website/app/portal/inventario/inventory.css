@@ -1,0 +1,118 @@
+.inventory-cluster {
+  margin: 18px 0 28px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: linear-gradient(145deg, #0a202d, #041018);
+}
+
+.inventory-cluster > header,
+.inventory-node-heading,
+.inventory-resource-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.inventory-cluster > header span,
+.inventory-node-heading span {
+  color: var(--gold2);
+  font-size: var(--hoi-font-small);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.inventory-cluster h2,
+.inventory-node h3 {
+  margin: 7px 0 0;
+  font-size: 20px;
+}
+
+.inventory-cluster > header small,
+.inventory-endpoints,
+.inventory-resource-list small {
+  color: #aab7c0;
+  font-size: var(--hoi-font-small);
+}
+
+.inventory-endpoints {
+  margin: 16px 0 20px;
+  overflow-wrap: anywhere;
+}
+
+.inventory-node-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 390px), 1fr));
+  gap: 14px;
+}
+
+.inventory-node {
+  min-width: 0;
+  padding: 19px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #081923;
+}
+
+.inventory-node-heading strong {
+  color: #76e08b;
+  font-size: var(--hoi-font-small);
+}
+
+.inventory-resource-list {
+  margin-top: 20px;
+}
+
+.inventory-resource-list h4 {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+.inventory-resource-list h4 span {
+  color: var(--gold2);
+}
+
+.inventory-resource-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inventory-resource-list li {
+  min-height: 44px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.inventory-resource-list li > span:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.inventory-resource-list li strong {
+  overflow-wrap: anywhere;
+}
+
+.inventory-resource-state {
+  color: #aab7c0;
+  font-size: var(--hoi-font-small);
+  white-space: nowrap;
+}
+
+.inventory-manual {
+  margin-top: 30px;
+}
+
+.inventory-manual > h2 {
+  font-size: 20px;
+}
+
+@media (max-width: 680px) {
+  .inventory-cluster > header,
+  .inventory-node-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
