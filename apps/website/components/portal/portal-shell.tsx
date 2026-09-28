@@ -18,7 +18,15 @@ const items = [
   ["/portal/ajuda", "Ajuda", "?"],
 ];
 
-export function PortalShell({ children }: { children: ReactNode }) {
+export function PortalShell({
+  children,
+  organizationName,
+  userName,
+}: {
+  children: ReactNode;
+  organizationName: string;
+  userName: string;
+}) {
   const pathname = usePathname();
 
   return (
@@ -41,16 +49,16 @@ export function PortalShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="portal-demo">
-          <strong>Ambiente demonstrativo</strong>
-          <small>Sem dados reais de clientes</small>
-          <Link href="/">Voltar ao site</Link>
+          <strong>{organizationName}</strong>
+          <small>Dados da sua organização</small>
+          <Link href="/portal/inventario">Abrir inventário</Link>
         </div>
       </aside>
 
       <div className="portal-content">
         <header className="portal-topbar">
           <div><small>Portal do Cliente</small><strong>Ambiente Corporativo</strong></div>
-          <div className="portal-user"><span>HO</span><div><strong>Cliente Demonstração</strong><small>Administrador</small></div></div>
+          <div className="portal-user"><span>HO</span><div><strong>{userName}</strong><small>{organizationName}</small></div></div>
         </header>
         <main className="portal-main">{children}</main>
       </div>

@@ -53,6 +53,13 @@ import "./cockpit/control-plane-root-cause.css";
 import "./cockpit/control-plane-reliability.css";
 
 export default async function PortalLayout({ children }: { children: ReactNode }) {
-  await requireOrganization();
-  return <PortalShell>{children}</PortalShell>;
+  const { organization, session } = await requireOrganization();
+  return (
+    <PortalShell
+      organizationName={organization.name}
+      userName={session.user.name?.trim() || session.user.email?.trim() || "Usuário"}
+    >
+      {children}
+    </PortalShell>
+  );
 }
