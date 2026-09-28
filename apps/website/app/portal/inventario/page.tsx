@@ -5,6 +5,7 @@ import {
   buildProxmoxInventory,
   type InventoryResource,
 } from "@/lib/inventory/proxmox-topology";
+import { DEMO_ASSET_IDS } from "@/lib/inventory/demo-assets";
 import "./inventory.css";
 
 export const metadata = {
@@ -110,7 +111,7 @@ export default async function Page({ searchParams }: Props) {
       where: {
         organizationId: organization.id,
         id: {
-          notIn: ["seed-proxmox-01", "seed-proxmox-02", "seed-firewall-01"],
+          notIn: DEMO_ASSET_IDS,
         },
       },
       orderBy: { name: "asc" },

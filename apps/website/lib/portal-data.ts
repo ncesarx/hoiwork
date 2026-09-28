@@ -1,24 +1,66 @@
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireOrganization } from "@/lib/authz";
+import { DEMO_ASSET_IDS } from "@/lib/inventory/demo-assets";
+import { buildProxmoxInventory } from "@/lib/inventory/proxmox-topology";
 
 export const getDashboardData = cache(async () => {
   const { organization } = await requireOrganization();
   const organizationId = organization.id;
 
-  const [assetCount, onlineAssets, openTickets, documentCount, contractCount, assets, tickets, contracts] =
+  const [instances, discovered, registered, openTickets, documentCount, contractCount, tickets, contracts] =
     await Promise.all([
-      prisma.asset.count({ where: { organizationId } }),
-      prisma.asset.count({ where: { organizationId, status: "ONLINE" } }),
+      prisma.proxmoxInstance.findMany({
+        where: { organizationId, enabled: true },
+        select: { id: true, name: true, site: true, baseUrl: true, status: true, lastSyncAt: true },
+      }),
+      prisma.infrastructureAsset.findMany({
+        where: {
+          organizationId,
+          provider: "PROXMOX",
+          active: true,
+          externalId: { startsWith: "proxmox/" },
+        },
+        select: {
+          externalId: true, assetType: true, name: true, nodeName: true,
+          status: true, ipAddress: true, metadata: true, lastSeenAt: true,
+        },
+      }),
+      prisma.asset.findMany({
+        where: { organizationId, id: { notIn: DEMO_ASSET_IDS } },
+        orderBy: { updatedAt: "desc" },
+      }),
       prisma.ticket.count({ where: { organizationId, status: { in: ["OPEN", "IN_PROGRESS"] } } }),
       prisma.document.count({ where: { organizationId } }),
       prisma.contract.count({ where: { organizationId, status: "ACTIVE" } }),
-      prisma.asset.findMany({ where: { organizationId }, orderBy: { updatedAt: "desc" }, take: 6 }),
       prisma.ticket.findMany({ where: { organizationId }, orderBy: { updatedAt: "desc" }, take: 5 }),
       prisma.contract.findMany({ where: { organizationId, status: "ACTIVE" }, orderBy: { endsAt: "asc" }, take: 3 }),
     ]);
 
-  return { organization, assetCount, onlineAssets, openTickets, documentCount, contractCount, assets, tickets, contracts };
+  const resources = buildProxmoxInventory(instances, discovered).flatMap((cluster) => [
+    ...cluster.nodes.flatMap((node) => [
+      node.resource, ...node.guests, ...node.storages, ...node.networks,
+    ]),
+    ...cluster.clusterStorages,
+  ]);
+  const assets = [
+    ...resources.map((resource) => ({
+      id: resource.key, name: resource.name, type: resource.type,
+      status: resource.status, ipAddress: resource.ipAddress,
+      source: "Proxmox",
+    })),
+    ...registered.map((asset) => ({
+      id: asset.id, name: asset.name, type: asset.type,
+      status: asset.status, ipAddress: asset.ipAddress,
+      source: "Cadastro",
+    })),
+  ];
+  return {
+    organization, assetCount: assets.length,
+    nodeCount: resources.filter((resource) => resource.type === "NODE").length,
+    openTickets,
+    documentCount, contractCount, assets: assets.slice(0, 6), tickets, contracts,
+  };
 });
 
 export const getAssets = cache(async (query?: string, type?: string) => {

@@ -1,24 +1,37 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/portal-data";
 
+const isOperational = (status: string) =>
+  ["ONLINE", "RUNNING"].includes(status.toUpperCase());
+
 export const metadata = { title:"Portal Enterprise", robots:{ index:false, follow:false } };
 
 export default async function PortalPage(){
   const d = await getDashboardData();
-  const availability = d.assetCount ? Math.round((d.onlineAssets/d.assetCount)*100) : 0;
   return <>
     <section className="portal-heading"><span>Enterprise Data Layer</span><h1>{d.organization.name}</h1><p>Indicadores consultados no PostgreSQL e isolados por organização.</p></section>
     <section className="data-stats">
-      <article><strong>{d.assetCount}</strong><span>Ativos</span></article>
-      <article><strong>{availability}%</strong><span>Online</span></article>
+      <article><strong>{d.assetCount}</strong><span>Recursos no inventário</span></article>
+      <article><strong>{d.nodeCount}</strong><span>Nós Proxmox</span></article>
       <article><strong>{d.openTickets}</strong><span>Chamados ativos</span></article>
       <article><strong>{d.documentCount}</strong><span>Documentos</span></article>
       <article><strong>{d.contractCount}</strong><span>Contratos ativos</span></article>
     </section>
     <section className="data-dashboard-grid">
       <article className="portal-panel">
-        <div className="portal-panel__header"><div><span>Banco de dados</span><h2>Infraestrutura</h2></div><Link href="/portal/inventario">Abrir inventário</Link></div>
-        <div className="data-list">{d.assets.map(a=><div key={a.id}><i className={a.status==="ONLINE"?"is-online":"is-warning"}/><span><strong>{a.name}</strong><small>{a.type} • {a.ipAddress ?? "IP não informado"}</small></span><b>{a.status}</b></div>)}</div>
+        <div className="portal-panel__header"><div><span>Inventário</span><h2>Infraestrutura</h2></div><Link href="/portal/inventario">Abrir inventário</Link></div>
+        <div className="data-list">
+          {d.assets.length ? d.assets.map((asset) => (
+            <div key={asset.id}>
+              <i className={isOperational(asset.status) ? "is-online" : "is-warning"} />
+              <span>
+                <strong>{asset.name}</strong>
+                <small>{asset.source} · {asset.type} · {asset.ipAddress ?? "IP não informado"}</small>
+              </span>
+              <b className={isOperational(asset.status) ? "" : "is-warning"}>{asset.status}</b>
+            </div>
+          )) : <p className="data-empty">Nenhum recurso encontrado. Consulte o Inventário e a última coleta.</p>}
+        </div>
       </article>
       <article className="portal-panel">
         <div className="portal-panel__header"><div><span>Atendimento</span><h2>Chamados recentes</h2></div><Link href="/portal/chamados">Ver todos</Link></div>
