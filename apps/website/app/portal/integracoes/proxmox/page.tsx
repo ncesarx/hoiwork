@@ -2,6 +2,7 @@ import { requireOrganization } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { ProxmoxInstanceManager } from "@/components/integrations/proxmox-instance-manager";
 import { RegistryConsolidationActions } from "@/components/integrations/registry-consolidation-actions";
+import { HelpLink } from "@/components/portal/help-link";
 
 export const metadata = {
   title: "Multi-Proxmox | Portal Enterprise",
@@ -43,6 +44,7 @@ export default async function MultiProxmoxPage() {
           múltiplos ambientes Proxmox sem colisão de Node, VMID, Storage ou
           Network.
         </p>
+        <HelpLink section="proxmox-local" label="Cadastro de Proxmox local e remoto" />
       </section>
 
       <section className="multi-proxmox-architecture">

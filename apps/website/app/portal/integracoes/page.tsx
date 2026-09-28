@@ -3,6 +3,7 @@ import { requireOrganization } from "@/lib/authz";
 import { calculateRiskScore } from "@/lib/risk-score";
 import { IntegrationActions } from "@/components/integrations/integration-actions";
 import { DigitalTwinReal } from "@/components/integrations/digital-twin-real";
+import { HelpLink } from "@/components/portal/help-link";
 
 export const metadata={title:"Integrações | Portal Enterprise",robots:{index:false,follow:false}};
 
@@ -47,7 +48,7 @@ export default async function Page(){
   const tls=process.env.PROXMOX_ALLOW_SELF_SIGNED==="true"?"Certificado autoassinado permitido":"Validação TLS estrita";
 
   return <>
-    <section className="portal-heading"><span>Enterprise Integration Platform</span><h1>Proxmox VE & Digital Twin</h1><p>Diagnóstico, sincronização e visão operacional dos recursos reais do cluster.</p></section>
+    <section className="portal-heading"><span>Enterprise Integration Platform</span><h1>Proxmox VE & Digital Twin</h1><p>Diagnóstico, sincronização e visão operacional dos recursos reais do cluster.</p><HelpLink section="integracoes" label="Integrações e Digital Twin" /></section>
 
     <section className="integration-diagnostics">
       <article><span>Modo</span><strong>{mode}</strong></article>

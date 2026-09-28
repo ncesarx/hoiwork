@@ -5,6 +5,7 @@ import { VirtualInfrastructurePanel } from "@/components/discovery/virtual-infra
 import { FabricPanel } from "@/components/discovery/fabric-panel";
 import { MultiSiteTopologyPanel } from "@/components/discovery/multisite-topology-panel";
 import { DiscoveryAutomationPanel } from "@/components/discovery/discovery-automation-panel";
+import { HelpLink } from "@/components/portal/help-link";
 
 export const metadata = {
   title: "Infrastructure Discovery | Portal Enterprise",
@@ -116,6 +117,7 @@ export default async function DiscoveryPage() {
             A execução consulta o Proxmox, valida os Nodes, persiste os dados e
             só conclui quando os registros são confirmados no PostgreSQL.
           </p>
+          <HelpLink section="discovery" label="Discovery" />
         </div>
 
         <DiscoveryConsole />

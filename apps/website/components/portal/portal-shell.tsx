@@ -15,6 +15,7 @@ const items = [
   ["/portal/chamados", "Chamados", "◎"],
   ["/portal/documentos", "Documentos", "▤"],
   ["/portal/manutencoes", "Manutenções", "◇"],
+  ["/portal/ajuda", "Ajuda", "?"],
 ];
 
 export function PortalShell({ children }: { children: ReactNode }) {

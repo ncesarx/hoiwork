@@ -6,6 +6,7 @@ import { SloAutomationPanel } from "@/components/observability/slo-automation-pa
 import { SloReportingPanel } from "@/components/observability/slo-reporting-panel";
 import { RetentionGovernancePanel } from "@/components/observability/retention-governance-panel";
 import { AutonomousGovernancePanel } from "@/components/observability/autonomous-governance-panel";
+import { HelpLink } from "@/components/portal/help-link";
 
 export const metadata = {
   title: "Notification Observability | Portal Enterprise",
@@ -25,6 +26,7 @@ export default function ObservabilityPage() {
           SLO de entregas LIVE, saúde dos conectores, latência de notificação e
           confiabilidade da automação.
         </p>
+        <HelpLink section="observabilidade" label="Observabilidade e SLO" />
       </section>
 
       <NotificationObservabilityPanel />
