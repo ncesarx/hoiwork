@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOrganization } from "@/lib/authz";
 import { DEMO_ASSET_IDS } from "@/lib/inventory/demo-assets";
 import { buildProxmoxInventory } from "@/lib/inventory/proxmox-topology";
+import { collectionFreshness } from "@/lib/inventory/freshness";
 
 export const getDashboardData = cache(async () => {
   const { organization } = await requireOrganization();
@@ -43,21 +44,29 @@ export const getDashboardData = cache(async () => {
     ]),
     ...cluster.clusterStorages,
   ]);
+  const evaluatedAt = new Date();
   const assets = [
     ...resources.map((resource) => ({
       id: resource.key, name: resource.name, type: resource.type,
       status: resource.status, ipAddress: resource.ipAddress,
-      source: "Proxmox",
+      source: "Proxmox", observedAt: resource.lastSeenAt,
+      freshness: collectionFreshness(resource.lastSeenAt, evaluatedAt),
     })),
     ...registered.map((asset) => ({
       id: asset.id, name: asset.name, type: asset.type,
       status: asset.status, ipAddress: asset.ipAddress,
-      source: "Cadastro",
+      source: "Cadastro", observedAt: null, freshness: null,
     })),
   ];
   return {
     organization, assetCount: assets.length,
     nodeCount: resources.filter((resource) => resource.type === "NODE").length,
+    proxmoxEndpoints: instances.map((instance) => ({
+      id: instance.id,
+      name: instance.name,
+      lastSyncAt: instance.lastSyncAt,
+      freshness: collectionFreshness(instance.lastSyncAt, evaluatedAt),
+    })),
     openTickets,
     documentCount, contractCount, assets: assets.slice(0, 6), tickets, contracts,
   };
