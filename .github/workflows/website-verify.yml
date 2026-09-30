@@ -12,6 +12,23 @@ permissions:
 jobs:
   website:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: hoiwork_test
+          POSTGRES_PASSWORD: hoiwork_test
+          POSTGRES_DB: hoiwork_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hoiwork_test -d hoiwork_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://hoiwork_test:hoiwork_test@127.0.0.1:5432/hoiwork_test
+      HOIWORK_TEST_DATABASE_URL: postgresql://hoiwork_test:hoiwork_test@127.0.0.1:5432/hoiwork_test
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -24,11 +41,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter website db:generate
-        env:
-          DATABASE_URL: postgresql://test:test@127.0.0.1:5432/hoiwork_ci
+      - run: pnpm --filter website db:deploy
       - run: pnpm --filter website test
+      - run: pnpm --filter website test:integration
       - run: pnpm --filter website typecheck
       - run: pnpm --filter website lint
       - run: pnpm --filter website build
-        env:
-          DATABASE_URL: postgresql://test:test@127.0.0.1:5432/hoiwork_ci

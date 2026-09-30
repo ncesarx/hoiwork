@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --import tsx --test lib/inventory/*.test.ts integrations/discovery/*.test.ts",
+    "test:integration": "node --import tsx --test integrations/discovery/*.integration.ts",
     "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",

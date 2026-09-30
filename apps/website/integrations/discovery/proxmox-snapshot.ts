@@ -1,6 +1,6 @@
 import type { ProxmoxInstanceClient } from "@/integrations/proxmox/instance-client";
 
-type SnapshotClient = Pick<
+export type SnapshotClient = Pick<
   ProxmoxInstanceClient,
   "version" | "nodes" | "guests" | "storages" | "clusterStatus" | "network"
 >;

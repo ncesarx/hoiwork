@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { decryptCredential } from "@/lib/proxmox/credentials";
-import { ProxmoxInstanceClient } from "@/integrations/proxmox/instance-client";
-import { collectProxmoxSnapshot } from "./proxmox-snapshot";
+import { ProxmoxInstanceClient, type InstanceConfig } from "@/integrations/proxmox/instance-client";
+import { collectProxmoxSnapshot, type SnapshotClient } from "./proxmox-snapshot";
 
 function ns(instanceId: string, externalId: string) {
   return `proxmox/${instanceId}/${externalId}`;
@@ -14,7 +14,9 @@ function j(value: Record<string, unknown>) {
 export async function discoverProxmoxInstance(params: {
   organizationId: string;
   instanceId: string;
-}) {
+}, options: {
+  createClient?: (config: InstanceConfig) => SnapshotClient;
+} = {}) {
   const instance = await prisma.proxmoxInstance.findFirst({
     where: {
       id: params.instanceId,
@@ -29,7 +31,7 @@ export async function discoverProxmoxInstance(params: {
 
   const currentInstance = instance;
 
-  const client = new ProxmoxInstanceClient({
+  const client = (options.createClient ?? ((config) => new ProxmoxInstanceClient(config)))({
     baseUrl: instance.baseUrl,
     tokenId: instance.tokenId,
     tokenSecret: decryptCredential(instance.tokenSecretEncrypted),
