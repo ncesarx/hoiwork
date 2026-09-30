@@ -17,6 +17,7 @@ export async function discoverProxmoxInstance(params: {
 }, options: {
   createClient?: (config: InstanceConfig) => SnapshotClient;
 } = {}) {
+  const startedAt = new Date();
   const instance = await prisma.proxmoxInstance.findFirst({
     where: {
       id: params.instanceId,
@@ -48,6 +49,30 @@ export async function discoverProxmoxInstance(params: {
 
   const now = new Date();
   return prisma.$transaction(async (tx) => {
+    const [lockedInstance] = await tx.$queryRaw<Array<{
+      enabled: boolean;
+      lastSyncAt: Date | null;
+    }>>`
+      SELECT "enabled", "lastSyncAt"
+      FROM "ProxmoxInstance"
+      WHERE "id" = ${currentInstance.id}
+        AND "organizationId" = ${params.organizationId}
+      FOR UPDATE
+    `;
+
+    if (!lockedInstance?.enabled) {
+      throw new Error("Instância Proxmox não encontrada ou desabilitada.");
+    }
+
+    if (lockedInstance.lastSyncAt && lockedInstance.lastSyncAt >= startedAt) {
+      return {
+        skipped: true as const,
+        reason: "NEWER_SYNC" as const,
+        instanceId: currentInstance.id,
+        instanceName: currentInstance.name,
+      };
+    }
+
     const discoveredExternalIds: string[] = [];
     let createdCount = 0;
     let updatedCount = 0;
@@ -267,12 +292,13 @@ export async function discoverProxmoxInstance(params: {
       data: {
         status: "HEALTHY",
         lastHealthAt: new Date(),
-        lastSyncAt: new Date(),
+        lastSyncAt: now,
         lastError: null,
       },
     });
 
     return {
+      skipped: false as const,
       instanceId: currentInstance.id,
       instanceName: currentInstance.name,
       endpoint: currentInstance.baseUrl,

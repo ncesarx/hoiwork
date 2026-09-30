@@ -134,6 +134,8 @@ test("complete collection atomically updates inventory and marks absent resource
       { organizationId, instanceId },
       { createClient: client },
     );
+    assert.equal(result.skipped, false);
+    if (result.skipped) throw new Error("A coleta completa não deveria ser ignorada.");
     const [instance, assets] = await Promise.all([
       prisma.proxmoxInstance.findUniqueOrThrow({ where: { id: instanceId } }),
       prisma.infrastructureAsset.findMany({ where: { organizationId } }),
@@ -147,6 +149,75 @@ test("complete collection atomically updates inventory and marks absent resource
     assert.equal(assets.find((asset) => asset.externalId === oldStorageId)?.status, "MISSING");
     assert.equal(assets.find((asset) => asset.externalId === oldStorageId)?.active, false);
     assert.equal(assets.filter((asset) => asset.active).length, 5);
+  });
+});
+
+test("older collection finishing last cannot replace a newer snapshot", async () => {
+  await withFixture(async ({ organizationId, instanceId, oldNodeId, oldStorageId }) => {
+    let releaseOld!: () => void;
+    let oldCollecting!: () => void;
+    const oldGate = new Promise<void>((resolve) => { releaseOld = resolve; });
+    const collecting = new Promise<void>((resolve) => { oldCollecting = resolve; });
+    const source = client();
+    const slow = discoverProxmoxInstance(
+      { organizationId, instanceId },
+      { createClient: () => ({
+        ...source,
+        nodes: async () => [{ node: "hoi", status: "offline" }],
+        guests: async () => [],
+        network: async () => {
+          oldCollecting();
+          await oldGate;
+          return [];
+        },
+      }) },
+    );
+
+    await collecting;
+    // Ensure the older request began in a different timestamp millisecond.
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    let fresh;
+    try {
+      fresh = await discoverProxmoxInstance(
+        { organizationId, instanceId },
+        { createClient: client },
+      );
+    } finally {
+      releaseOld();
+    }
+    assert.equal(fresh.skipped, false);
+    const stale = await slow;
+    assert.deepEqual(stale, {
+      skipped: true,
+      reason: "NEWER_SYNC",
+      instanceId,
+      instanceName: "Endpoint teste",
+    });
+
+    const assets = await prisma.infrastructureAsset.findMany({ where: { organizationId } });
+    assert.equal(assets.find((asset) => asset.externalId === oldNodeId)?.status, "ONLINE");
+    assert.equal(assets.find((asset) => asset.externalId === oldStorageId)?.active, false);
+    assert.equal(assets.filter((asset) => asset.active).length, 5);
+  });
+});
+
+test("late failure cannot mark a newer successful sync as ERROR", async () => {
+  await withFixture(async ({ organizationId, instanceId }) => {
+    const startedAt = new Date();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const result = await discoverProxmoxInstance(
+      { organizationId, instanceId },
+      { createClient: client },
+    );
+    assert.equal(result.skipped, false);
+
+    const update = await recordProxmoxDiscoveryFailure({
+      organizationId, instanceId, startedAt, message: "Falha antiga",
+    });
+    const instance = await prisma.proxmoxInstance.findUniqueOrThrow({ where: { id: instanceId } });
+    assert.equal(update.count, 0);
+    assert.equal(instance.status, "HEALTHY");
+    assert.equal(instance.lastError, null);
   });
 });
 

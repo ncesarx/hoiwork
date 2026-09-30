@@ -3,6 +3,7 @@ import { requireOrganization } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { encryptCredential } from "@/lib/proxmox/credentials";
 import { discoverProxmoxInstance } from "@/integrations/discovery/multi-proxmox-engine";
+import { recordProxmoxDiscoveryFailure } from "@/integrations/discovery/proxmox-failure";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,11 +51,19 @@ export async function POST() {
     },
   });
 
+  const startedAt = new Date();
   try {
     const result = await discoverProxmoxInstance({
       organizationId: organization.id,
       instanceId: instance.id,
     });
+
+    if (result.skipped) {
+      return NextResponse.json(
+        { ok: false, error: "Coleta anterior ignorada; confirme o inventário antes de migrar os ativos legacy.", ...result },
+        { status: 409 },
+      );
+    }
 
     const legacyAssets = await prisma.infrastructureAsset.updateMany({
       where: {
@@ -79,9 +88,11 @@ export async function POST() {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Falha ao migrar ambiente legacy.";
 
-    await prisma.proxmoxInstance.update({
-      where: { id: instance.id },
-      data: { status: "ERROR", lastError: message },
+    await recordProxmoxDiscoveryFailure({
+      organizationId: organization.id,
+      instanceId: instance.id,
+      startedAt,
+      message,
     });
 
     return NextResponse.json(

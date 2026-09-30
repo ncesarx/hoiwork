@@ -25,6 +25,14 @@ export async function POST(
       instanceId: id,
     });
 
+    if (result.skipped) {
+      return NextResponse.json({
+        ok: true,
+        message: "Coleta anterior ignorada: já existe um sync mais recente.",
+        ...result,
+      });
+    }
+
     return NextResponse.json({
       ok: true,
       message: `${result.verifiedCount} ativo(s) isolado(s) e verificado(s) para esta instância.`,
