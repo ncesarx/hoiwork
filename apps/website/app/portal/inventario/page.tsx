@@ -139,6 +139,7 @@ export default async function Page({ searchParams }: Props) {
         baseUrl: true,
         status: true,
         lastSyncAt: true,
+        lastError: true,
       },
     }),
     prisma.infrastructureAsset.findMany({
@@ -260,8 +261,8 @@ export default async function Page({ searchParams }: Props) {
               return (
                 <li key={instance.id}>
                   <strong>{instance.name}</strong>
-                  <span className={freshness === "RECENT" ? "" : "is-stale"}>
-                    {freshnessLabel(freshness)} · {formatCollectionTime(instance.lastSyncAt)}
+                  <span className={freshness === "RECENT" && instance.status === "HEALTHY" && !instance.lastError ? "" : "is-stale"}>
+                    {instance.lastError ? "Falha na última tentativa" : instance.status} · último sucesso {freshnessLabel(freshness)} · {formatCollectionTime(instance.lastSyncAt)}
                   </span>
                 </li>
               );

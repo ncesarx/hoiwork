@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireOrganization } from "@/lib/authz";
+import { prisma } from "@/lib/prisma";
 import { discoverProxmoxInstance } from "@/integrations/discovery/multi-proxmox-engine";
 
 export const runtime = "nodejs";
@@ -16,6 +17,7 @@ export async function POST(
   }
 
   const { id } = await context.params;
+  const startedAt = new Date();
 
   try {
     const result = await discoverProxmoxInstance({
@@ -29,11 +31,19 @@ export async function POST(
       ...result,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: error instanceof Error ? error.message : "Falha no discovery.",
+    const message = error instanceof Error ? error.message : "Falha no discovery.";
+    await prisma.proxmoxInstance.updateMany({
+      where: {
+        id,
+        organizationId: organization.id,
+        enabled: true,
+        OR: [{ lastSyncAt: null }, { lastSyncAt: { lt: startedAt } }],
       },
+      data: { status: "ERROR", lastHealthAt: new Date(), lastError: message },
+    }).catch(() => {});
+
+    return NextResponse.json(
+      { ok: false, error: message },
       { status: 500 },
     );
   }

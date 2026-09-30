@@ -13,7 +13,7 @@ export const getDashboardData = cache(async () => {
     await Promise.all([
       prisma.proxmoxInstance.findMany({
         where: { organizationId, enabled: true },
-        select: { id: true, name: true, site: true, baseUrl: true, status: true, lastSyncAt: true },
+        select: { id: true, name: true, site: true, baseUrl: true, status: true, lastSyncAt: true, lastError: true },
       }),
       prisma.infrastructureAsset.findMany({
         where: {
@@ -43,6 +43,7 @@ export const getDashboardData = cache(async () => {
       node.resource, ...node.guests, ...node.storages, ...node.networks,
     ]),
     ...cluster.clusterStorages,
+    ...cluster.unassignedResources,
   ]);
   const evaluatedAt = new Date();
   const assets = [
@@ -64,6 +65,8 @@ export const getDashboardData = cache(async () => {
     proxmoxEndpoints: instances.map((instance) => ({
       id: instance.id,
       name: instance.name,
+      status: instance.status,
+      lastAttemptFailed: !!instance.lastError,
       lastSyncAt: instance.lastSyncAt,
       freshness: collectionFreshness(instance.lastSyncAt, evaluatedAt),
     })),

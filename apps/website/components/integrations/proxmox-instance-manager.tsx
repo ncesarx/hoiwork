@@ -100,11 +100,11 @@ export function ProxmoxInstanceManager({
           : data.message ?? "Discovery concluído.",
       );
 
-      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Erro inesperado.");
     } finally {
       setBusy(null);
+      router.refresh();
     }
   }
 

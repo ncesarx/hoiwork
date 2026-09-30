@@ -22,7 +22,7 @@ export const metadata = { title:"Portal Enterprise", robots:{ index:false, follo
 
 export default async function PortalPage(){
   const d = await getDashboardData();
-  const recentEndpoints = d.proxmoxEndpoints.filter((endpoint) => endpoint.freshness === "RECENT").length;
+  const recentEndpoints = d.proxmoxEndpoints.filter((endpoint) => endpoint.status === "HEALTHY" && !endpoint.lastAttemptFailed && endpoint.freshness === "RECENT").length;
   return <>
     <section className="portal-heading"><span>Enterprise Data Layer</span><h1>{d.organization.name}</h1><p>Indicadores consultados no PostgreSQL e isolados por organização.</p></section>
     <section className="data-stats">
@@ -37,14 +37,14 @@ export default async function PortalPage(){
         <div className="portal-panel__header"><div><span>Inventário</span><h2>Infraestrutura</h2></div><Link href="/portal/inventario">Abrir inventário</Link></div>
         <div className="dashboard-freshness">
           <strong>
-            Coleta Proxmox: {recentEndpoints} de {d.proxmoxEndpoints.length} endpoints recentes
+            Coleta Proxmox: {recentEndpoints} de {d.proxmoxEndpoints.length} endpoints saudáveis com coleta recente
             (até {COLLECTION_RECENT_MINUTES} min)
           </strong>
           {d.proxmoxEndpoints.length ? (
             <ul>
               {d.proxmoxEndpoints.map((endpoint) => (
                 <li key={endpoint.id}>
-                  {endpoint.name}: {freshnessLabel(endpoint.freshness)} · {formatCollectionTime(endpoint.lastSyncAt)}
+                  {endpoint.name}: {endpoint.lastAttemptFailed ? "falha na última tentativa" : endpoint.status} · último sucesso {freshnessLabel(endpoint.freshness)} · {formatCollectionTime(endpoint.lastSyncAt)}
                 </li>
               ))}
             </ul>
