@@ -3,23 +3,10 @@ import { randomUUID } from "node:crypto";
 import { test } from "node:test";
 import { prisma } from "@/lib/prisma";
 import { encryptCredential } from "@/lib/proxmox/credentials";
+import { requireDisposableDatabase } from "@/lib/test-support/disposable-db";
 import { discoverProxmoxInstance } from "./multi-proxmox-engine";
 import { recordProxmoxDiscoveryFailure } from "./proxmox-failure";
 import type { SnapshotClient } from "./proxmox-snapshot";
-
-function requireDisposableDatabase() {
-  const url = process.env.DATABASE_URL;
-  if (!url || url !== process.env.HOIWORK_TEST_DATABASE_URL) {
-    throw new Error("O teste exige HOIWORK_TEST_DATABASE_URL igual a DATABASE_URL.");
-  }
-  const parsed = new URL(url);
-  if (
-    !["127.0.0.1", "localhost"].includes(parsed.hostname) ||
-    parsed.pathname !== "/hoiwork_test"
-  ) {
-    throw new Error("O teste só pode usar o banco local descartável hoiwork_test.");
-  }
-}
 
 function client(): SnapshotClient {
   return {

@@ -21,12 +21,13 @@ export const manualSections = [
     steps: [
       "Reúna nome do cliente, responsáveis, contatos, sites, escopo contratado e ambientes que serão acompanhados.",
       "Solicite ao administrador o provisionamento da organização e dos usuários, com os vínculos e permissões necessários. O portal atual não oferece uma tela administrativa completa de cadastro de novos clientes.",
+      "O administrador pode consultar usuários vinculados, papéis e estado de acesso em Organização e acessos; essa tela é de consulta.",
       "Valide o primeiro login com o usuário do cliente e confirme com o administrador que ele está vinculado à organização correta.",
       "Cadastre as instâncias Proxmox do cliente no Integration Registry, teste cada conexão e execute o Discovery da instância desejada.",
       "Confira recursos descobertos, inventário, contratos e planos de Backup/DR. Combine responsáveis por chamados, incidentes e revisão diária do Cockpit.",
     ],
     note: "Não use o cadastro de Proxmox como substituto do cadastro de cliente. Cada instância pertence à organização do usuário autenticado.",
-    links: [{ href: "/portal/integracoes/proxmox", label: "Cadastrar Proxmox" }, { href: "/portal/contratos", label: "Consultar contratos" }],
+    links: [{ href: "/portal/organizacao", label: "Organização e acessos (ADMIN)" }, { href: "/portal/integracoes/proxmox", label: "Cadastrar Proxmox" }, { href: "/portal/contratos", label: "Consultar contratos" }],
   },
   {
     id: "proxmox-local",

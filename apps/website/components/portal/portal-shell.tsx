@@ -22,10 +22,12 @@ export function PortalShell({
   children,
   organizationName,
   userName,
+  isAdmin,
 }: {
   children: ReactNode;
   organizationName: string;
   userName: string;
+  isAdmin: boolean;
 }) {
   const pathname = usePathname();
 
@@ -46,6 +48,11 @@ export function PortalShell({
               </Link>
             );
           })}
+          {isAdmin ? (
+            <Link href="/portal/organizacao" className={pathname.startsWith("/portal/organizacao") ? "is-active" : ""}>
+              <span>♙</span>Organização e acessos
+            </Link>
+          ) : null}
         </nav>
 
         <div className="portal-demo">

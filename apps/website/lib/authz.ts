@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { getActiveMembership } from "@/lib/organization/access";
 
 export const requirePortalSession = cache(async () => {
   const session = await auth();
@@ -14,16 +14,10 @@ export const requireOrganization = cache(async () => {
   const organizationId = session.user.organizationId;
   if (!organizationId) redirect("/login?error=organization");
 
-  const membership = await prisma.membership.findUnique({
-    where: {
-      userId_organizationId: {
-        userId: session.user.id,
-        organizationId,
-      },
-    },
-    include: { organization: true },
-  });
+  const membership = await getActiveMembership(session.user.id, organizationId);
 
-  if (!membership?.organization.active) redirect("/login?error=access");
+  if (!membership) redirect("/login?error=access");
+  session.user.role = membership.role;
+  session.user.organizationName = membership.organization.name;
   return { session, membership, organization: membership.organization };
 });
