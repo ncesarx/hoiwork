@@ -103,10 +103,16 @@
   font-size: 13px;
 }
 
-.inventory-resource-list li > span:first-child {
+.inventory-resource-description {
   display: grid;
   gap: 3px;
 }
+
+.inventory-evidence small { color: #aab7c0; font-size: var(--hoi-font-small); }
+.inventory-observations { margin-top: 5px; color: #aab7c0; font-size: var(--hoi-font-small); }
+.inventory-observations summary { cursor: pointer; color: var(--gold2); }
+.inventory-observations ul { margin: 7px 0 0; padding-left: 18px; list-style: disc; }
+.inventory-observations li { display: list-item; min-height: 0; padding: 3px 0; border: 0; font-size: var(--hoi-font-small); }
 
 .inventory-resource-list li strong {
   overflow-wrap: anywhere;

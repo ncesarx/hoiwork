@@ -1,4 +1,5 @@
 import type { InfrastructureAsset, ProxmoxInstance } from "@prisma/client";
+import { collectionFreshness } from "./freshness";
 
 type Asset = Pick<
   InfrastructureAsset,
@@ -27,7 +28,21 @@ export type InventoryResource = {
   ipAddress: string | null;
   vmid: number | null;
   lastSeenAt: Date;
+  sourceInstanceName: string;
+  observations: Array<{
+    instanceId: string;
+    instanceName: string;
+    status: string;
+    lastSeenAt: Date;
+  }>;
 };
+
+export function hasRecentStatusConflict(resource: InventoryResource, evaluatedAt: Date) {
+  const recentStatuses = resource.observations
+    .filter((observation) => collectionFreshness(observation.lastSeenAt, evaluatedAt) === "RECENT")
+    .map((observation) => observation.status.toUpperCase());
+  return new Set(recentStatuses).size > 1;
+}
 
 export type InventoryCluster = {
   key: string;
@@ -100,7 +115,16 @@ export function buildProxmoxInventory(
       const sourceId = resourceId(asset, instance.id);
       const resourceKey = `${asset.assetType}:${sourceId}`;
       const previous = cluster.resources.get(resourceKey);
-      if (previous && previous.lastSeenAt >= asset.lastSeenAt) continue;
+      const observation = {
+        instanceId: instance.id,
+        instanceName: instance.name,
+        status: asset.status,
+        lastSeenAt: asset.lastSeenAt,
+      };
+      if (previous && previous.lastSeenAt >= asset.lastSeenAt) {
+        previous.observations.push(observation);
+        continue;
+      }
 
       const metadata = asset.metadata;
       const vmid =
@@ -116,6 +140,8 @@ export function buildProxmoxInventory(
         ipAddress: asset.ipAddress,
         vmid: typeof vmid === "number" ? vmid : null,
         lastSeenAt: asset.lastSeenAt,
+        sourceInstanceName: instance.name,
+        observations: [...(previous?.observations ?? []), observation],
       });
     }
   }

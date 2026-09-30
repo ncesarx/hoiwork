@@ -3,6 +3,7 @@ import { requireOrganization } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import {
   buildProxmoxInventory,
+  hasRecentStatusConflict,
   type InventoryResource,
 } from "@/lib/inventory/proxmox-topology";
 import { DEMO_ASSET_IDS } from "@/lib/inventory/demo-assets";
@@ -56,23 +57,53 @@ function ResourceList({
       <ul>
         {resources.map((resource) => {
           const freshness = collectionFreshness(resource.lastSeenAt, evaluatedAt);
+          const conflict = hasRecentStatusConflict(resource, evaluatedAt);
           return (
             <li key={resource.key}>
-              <span>
+              <div className="inventory-resource-description">
                 <strong>{resource.name}</strong>
                 <small>
                   {resource.vmid != null && <>VMID {resource.vmid} · </>}
                   visto em {formatCollectionTime(resource.lastSeenAt)}
                 </small>
-              </span>
-              <span className={`inventory-resource-state${freshness === "RECENT" ? "" : " is-stale"}`}>
+                <ResourceEvidence resource={resource} evaluatedAt={evaluatedAt} />
+              </div>
+              <span className={`inventory-resource-state${freshness === "RECENT" && !conflict ? "" : " is-stale"}`}>
                 {resource.type} · {resource.status}
                 {freshness !== "RECENT" && ` · ${freshnessLabel(freshness)}`}
+                {conflict && " · estados divergentes"}
               </span>
             </li>
           );
         })}
       </ul>
+    </div>
+  );
+}
+
+function ResourceEvidence({ resource, evaluatedAt }: {
+  resource: InventoryResource;
+  evaluatedAt: Date;
+}) {
+  return (
+    <div className="inventory-evidence">
+      <small>Origem do estado: {resource.sourceInstanceName}</small>
+      {resource.observations.length > 1 && (
+        <details className="inventory-observations">
+          <summary>
+            {hasRecentStatusConflict(resource, evaluatedAt)
+              ? "Comparar estados divergentes"
+              : `Comparar ${resource.observations.length} endpoints`}
+          </summary>
+          <ul>
+            {resource.observations.map((observation) => (
+              <li key={observation.instanceId}>
+                {observation.instanceName}: {observation.status} · {formatCollectionTime(observation.lastSeenAt)}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </div>
   );
 }
@@ -260,6 +291,7 @@ export default async function Page({ searchParams }: Props) {
           <div className="inventory-node-grid">
             {cluster.nodes.map((node) => {
               const freshness = collectionFreshness(node.resource.lastSeenAt, evaluatedAt);
+              const conflict = hasRecentStatusConflict(node.resource, evaluatedAt);
               return (
                 <article key={node.resource.key} className="inventory-node">
                   <div className="inventory-node-heading">
@@ -268,11 +300,13 @@ export default async function Page({ searchParams }: Props) {
                       <h3>{node.resource.name}</h3>
                       <small>Visto em {formatCollectionTime(node.resource.lastSeenAt)}</small>
                     </div>
-                    <strong className={freshness === "RECENT" ? "" : "is-stale"}>
+                    <strong className={freshness === "RECENT" && !conflict ? "" : "is-stale"}>
                       {node.resource.status}
                       {freshness !== "RECENT" && ` · ${freshnessLabel(freshness)}`}
+                      {conflict && " · estados divergentes"}
                     </strong>
                   </div>
+                  <ResourceEvidence resource={node.resource} evaluatedAt={evaluatedAt} />
                   <ResourceList
                     title="Máquinas virtuais e contêineres"
                     resources={node.guests}
