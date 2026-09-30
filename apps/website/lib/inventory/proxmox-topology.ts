@@ -55,6 +55,7 @@ export type InventoryCluster = {
     networks: InventoryResource[];
   }>;
   clusterStorages: InventoryResource[];
+  unassignedResources: InventoryResource[];
 };
 
 function resourceId(asset: Asset, instanceId: string) {
@@ -89,8 +90,6 @@ export function buildProxmoxInventory(
         nodeAssets.map((asset) => asset.name.toLowerCase()),
       ),
     ].sort();
-    if (memberNames.length === 0) continue;
-
     const names = new Set(
       nodeAssets.map((asset) => asset.clusterName?.trim().toLowerCase() || ""),
     );
@@ -148,6 +147,9 @@ export function buildProxmoxInventory(
 
   return [...clusters].map(([key, cluster]) => {
     const resources = [...cluster.resources.values()];
+    const nodeNames = new Set(
+      resources.filter((resource) => resource.type === "NODE").map((resource) => resource.name),
+    );
     const byName = (a: InventoryResource, b: InventoryResource) =>
       a.name.localeCompare(b.name);
     const nodes = resources
@@ -183,6 +185,13 @@ export function buildProxmoxInventory(
       nodes,
       clusterStorages: resources
         .filter((resource) => resource.type === "STORAGE" && !resource.nodeName)
+        .sort(byName),
+      unassignedResources: resources
+        .filter((resource) =>
+          ["VM", "LXC", "STORAGE", "NETWORK"].includes(resource.type) &&
+          (resource.type !== "STORAGE" || !!resource.nodeName) &&
+          (!resource.nodeName || !nodeNames.has(resource.nodeName)),
+        )
         .sort(byName),
     };
   });

@@ -95,3 +95,21 @@ test("recent disagreements are visible without treating an old observation as a 
   assert.equal(hasRecentStatusConflict(guest, now), true);
   assert.equal(hasRecentStatusConflict(guest, new Date(now.getTime() + 26 * 60_000)), false);
 });
+
+test("resources remain visible when the reported node is missing from the collection", () => {
+  const now = new Date("2026-09-28T13:18:41Z");
+  const instances: Instances = [
+    { id: "a", name: "Partial", site: null, baseUrl: "https://a:8006", status: "DEGRADED", lastSyncAt: now },
+  ];
+  const assets: Assets = [
+    { externalId: "proxmox/a/qemu/105", assetType: "VM", name: "works-www", nodeName: "hoi", metadata: { sourceExternalId: "qemu/105", vmid: 105 } },
+    { externalId: "proxmox/a/network/homeoffice/vmbr0", assetType: "NETWORK", name: "vmbr0", nodeName: "homeoffice", metadata: { sourceExternalId: "network/homeoffice/vmbr0" } },
+    { externalId: "proxmox/a/storage/cluster/shared", assetType: "STORAGE", name: "shared", nodeName: null, metadata: { sourceExternalId: "storage/cluster/shared" } },
+  ].map((asset) => ({ ...asset, clusterName: "hoi-cloud", status: "ONLINE", ipAddress: null, lastSeenAt: now }));
+
+  const [cluster] = buildProxmoxInventory(instances, assets);
+  assert.equal(cluster.nodes.length, 0);
+  assert.equal(cluster.clusterName, null);
+  assert.deepEqual(cluster.unassignedResources.map((resource) => resource.name), ["vmbr0", "works-www"]);
+  assert.deepEqual(cluster.clusterStorages.map((resource) => resource.name), ["shared"]);
+});

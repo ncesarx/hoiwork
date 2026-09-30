@@ -64,6 +64,7 @@ function ResourceList({
                 <strong>{resource.name}</strong>
                 <small>
                   {resource.vmid != null && <>VMID {resource.vmid} · </>}
+                  {resource.nodeName && <>nó {resource.nodeName} · </>}
                   visto em {formatCollectionTime(resource.lastSeenAt)}
                 </small>
                 <ResourceEvidence resource={resource} evaluatedAt={evaluatedAt} />
@@ -193,9 +194,12 @@ export default async function Page({ searchParams }: Props) {
       clusterStorages: cluster.clusterStorages.filter((resource) =>
         matches(resource, query, type),
       ),
+      unassignedResources: cluster.unassignedResources.filter((resource) =>
+        matches(resource, query, type),
+      ),
     }))
     .filter(
-      (cluster) => cluster.nodes.length || cluster.clusterStorages.length,
+      (cluster) => cluster.nodes.length || cluster.clusterStorages.length || cluster.unassignedResources.length,
     );
 
   const assets = registeredAssets.filter(
@@ -327,6 +331,16 @@ export default async function Page({ searchParams }: Props) {
             resources={cluster.clusterStorages}
             evaluatedAt={evaluatedAt}
           />
+          {cluster.unassignedResources.length > 0 && (
+            <div className="inventory-unassigned">
+              <p>Recursos descobertos sem nó correspondente nesta coleta. Confira o nó informado e a atualização da fonte.</p>
+              <ResourceList
+                title="Recursos sem nó correspondente"
+                resources={cluster.unassignedResources}
+                evaluatedAt={evaluatedAt}
+              />
+            </div>
+          )}
         </section>
       ))}
 
