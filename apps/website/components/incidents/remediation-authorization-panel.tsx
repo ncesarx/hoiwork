@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useCurrentTime } from "@/components/incidents/use-current-time";
 
 type Authorization = {
   id: string;
@@ -35,6 +36,7 @@ export function RemediationAuthorizationPanel({
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const [reason, setReason] = useState("");
+  const currentTime = useCurrentTime();
 
   async function authorize() {
     setBusy("authorize");
@@ -98,11 +100,11 @@ export function RemediationAuthorizationPanel({
     }
   }
 
-  const active = authorizations.find(
+  const active = currentTime === null ? null : authorizations.find(
     (item) =>
       item.status === "AUTHORIZED" &&
       !item.revokedAt &&
-      new Date(item.expiresAt).getTime() > Date.now(),
+      new Date(item.expiresAt).getTime() > currentTime,
   );
 
   return (
@@ -118,7 +120,7 @@ export function RemediationAuthorizationPanel({
         </div>
         <div>
           <span>Execution Gate</span>
-          <strong>{active ? "AUTHORIZED" : "CLOSED"}</strong>
+          <strong>{currentTime === null ? "CHECKING" : active ? "AUTHORIZED" : "CLOSED"}</strong>
         </div>
       </div>
 
@@ -133,7 +135,7 @@ export function RemediationAuthorizationPanel({
         </article>
         <article>
           <span>Authorization</span>
-          <strong>{active ? "ACTIVE" : "NONE"}</strong>
+          <strong>{currentTime === null ? "CHECKING" : active ? "ACTIVE" : "NONE"}</strong>
         </article>
         <article>
           <span>Real mutation</span>
@@ -146,6 +148,7 @@ export function RemediationAuthorizationPanel({
           disabled={
             busy !== "" ||
             !canAuthorize ||
+            currentTime === null ||
             governanceDecision !== "REAL_EXECUTION_ELIGIBLE" ||
             Boolean(active)
           }

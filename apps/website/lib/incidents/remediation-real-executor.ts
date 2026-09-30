@@ -137,11 +137,10 @@ export async function executeAuthorizedStartVm(input: {
     throw new Error('Confirmação inválida. Digite exatamente "START_VM".');
   }
 
-  const autonomousGovernance =
-    await assertCapabilityEnforcement({
-      organizationId: input.organizationId,
-      capability: "REMEDIATION_REAL",
-    });
+  await assertCapabilityEnforcement({
+    organizationId: input.organizationId,
+    capability: "REMEDIATION_REAL",
+  });
 
   if (!envTrue("HOIWORK_REAL_START_VM_EXECUTOR_ENABLED", false)) {
     throw new Error("Executor real START_VM está desabilitado.");

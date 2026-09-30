@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useCurrentTime } from "@/components/incidents/use-current-time";
 
 export function RemediationApprovalRenewalPanel({
   incidentId,
@@ -26,14 +27,15 @@ export function RemediationApprovalRenewalPanel({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [reason, setReason] = useState("");
+  const currentTime = useCurrentTime();
 
-  const ageMinutes = Math.max(
+  const ageMinutes = currentTime === null ? null : Math.max(
     0,
-    Math.floor((Date.now() - new Date(approvedAt).getTime()) / 60000),
+    Math.floor((currentTime - new Date(approvedAt).getTime()) / 60000),
   );
-  const stale = ageMinutes > maxAgeMinutes;
-  const expired = expiresAt
-    ? new Date(expiresAt).getTime() <= Date.now()
+  const stale = ageMinutes !== null && ageMinutes > maxAgeMinutes;
+  const expired = currentTime !== null && expiresAt
+    ? new Date(expiresAt).getTime() <= currentTime
     : false;
 
   async function renew() {
@@ -90,16 +92,16 @@ export function RemediationApprovalRenewalPanel({
           </p>
         </div>
 
-        <div className={`approval-freshness is-${expired ? "expired" : stale ? "stale" : "fresh"}`}>
+        <div className={`approval-freshness is-${currentTime === null ? "checking" : expired ? "expired" : stale ? "stale" : "fresh"}`}>
           <span>Approval Freshness</span>
-          <strong>{expired ? "EXPIRED" : stale ? "STALE" : "FRESH"}</strong>
+          <strong>{currentTime === null ? "CHECKING" : expired ? "EXPIRED" : stale ? "STALE" : "FRESH"}</strong>
         </div>
       </div>
 
       <div className="remediation-approval-renewal-kpis">
         <article><span>Action</span><strong>{action}</strong></article>
         <article><span>Approved by</span><strong>{approvedByName ?? "N/D"}</strong></article>
-        <article><span>Age</span><strong>{ageMinutes} min</strong></article>
+        <article><span>Age</span><strong>{ageMinutes === null ? "—" : `${ageMinutes} min`}</strong></article>
         <article><span>Max age</span><strong>{maxAgeMinutes} min</strong></article>
       </div>
 
@@ -126,7 +128,7 @@ export function RemediationApprovalRenewalPanel({
         </small>
       ) : null}
 
-      {!stale && !expired ? (
+      {currentTime !== null && !stale && !expired ? (
         <small className="approval-renewal-fresh">
           Aprovação ainda válida para a janela atual de governança.
         </small>

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useCurrentTime } from "@/components/incidents/use-current-time";
 
 export function RemediationRealExecutorPanel({
   incidentId,
@@ -28,11 +29,13 @@ export function RemediationRealExecutorPanel({
   const [confirmation, setConfirmation] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const currentTime = useCurrentTime();
 
   const active =
+    currentTime !== null &&
     authorizationStatus === "AUTHORIZED" &&
     Boolean(expiresAt) &&
-    new Date(expiresAt as string).getTime() > Date.now();
+    new Date(expiresAt as string).getTime() > currentTime;
 
   async function executeReal() {
     if (!authorizationId) return;
@@ -131,7 +134,7 @@ export function RemediationRealExecutorPanel({
         </button>
       </div>
 
-      {!active ? (
+      {currentTime !== null && !active ? (
         <small className="real-executor-blocked">
           Autorização inexistente, expirada, consumida ou revogada.
         </small>

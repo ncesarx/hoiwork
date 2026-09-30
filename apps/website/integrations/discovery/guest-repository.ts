@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { InfrastructureAsset } from "@prisma/client";
 
 export type GuestAssetInput = {
   externalId: string;
@@ -21,7 +22,7 @@ function json(value: Record<string, unknown> | undefined) {
   return value ? JSON.parse(JSON.stringify(value)) : undefined;
 }
 
-function comparableFromExisting(existing: any) {
+function comparableFromExisting(existing: InfrastructureAsset) {
   return JSON.stringify({
     name: existing.name,
     status: existing.status,

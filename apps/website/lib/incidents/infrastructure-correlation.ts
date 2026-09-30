@@ -161,7 +161,8 @@ export async function correlateInfrastructureIncidents(organizationId: string) {
       },
     });
 
-    existing ? updated++ : opened++;
+    if (existing) updated++;
+    else opened++;
   }
 
   const resolved = await prisma.infrastructureIncident.updateMany({
