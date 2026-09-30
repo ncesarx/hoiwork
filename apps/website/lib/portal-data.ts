@@ -23,7 +23,7 @@ export const getDashboardData = cache(async () => {
           externalId: { startsWith: "proxmox/" },
         },
         select: {
-          externalId: true, assetType: true, name: true, nodeName: true,
+          externalId: true, clusterName: true, assetType: true, name: true, nodeName: true,
           status: true, ipAddress: true, metadata: true, lastSeenAt: true,
         },
       }),

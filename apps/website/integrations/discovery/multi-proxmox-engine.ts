@@ -41,6 +41,12 @@ export async function discoverProxmoxInstance(params: {
     client.guests(),
     client.storages(),
   ]);
+  // Cluster identity is optional for collection; without it the inventory
+  // keeps this endpoint separate instead of guessing from node names alone.
+  const clusterStatus = await client.clusterStatus().catch(() => []);
+  const clusterEntry = clusterStatus.find((entry) => entry.type === "cluster");
+  const clusterName = clusterEntry?.name?.trim() ||
+    (clusterEntry?.id && clusterEntry.id !== "cluster" ? clusterEntry.id.trim() : null);
 
   const now = new Date();
   const discoveredExternalIds: string[] = [];
@@ -89,6 +95,7 @@ export async function discoverProxmoxInstance(params: {
         },
       },
       update: {
+        clusterName,
         assetType: asset.assetType,
         name: asset.name,
         status: asset.status,
@@ -116,6 +123,7 @@ export async function discoverProxmoxInstance(params: {
         organizationId: params.organizationId,
         provider: "PROXMOX",
         externalId,
+        clusterName,
         assetType: asset.assetType,
         name: asset.name,
         status: asset.status,

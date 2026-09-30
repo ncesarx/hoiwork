@@ -66,6 +66,12 @@ export type PveNetwork = {
   bond_mode?: string;
 };
 
+export type PveClusterStatus = {
+  type: string;
+  name?: string;
+  id?: string;
+};
+
 export class ProxmoxInstanceClient {
   constructor(private readonly config: InstanceConfig) {}
 
@@ -120,6 +126,10 @@ export class ProxmoxInstanceClient {
 
   nodes() {
     return this.request<PveNode[]>("/nodes");
+  }
+
+  clusterStatus() {
+    return this.request<PveClusterStatus[]>("/cluster/status");
   }
 
   guests() {

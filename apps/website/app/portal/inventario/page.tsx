@@ -113,6 +113,7 @@ export default async function Page({ searchParams }: Props) {
       },
       select: {
         externalId: true,
+        clusterName: true,
         assetType: true,
         name: true,
         nodeName: true,
@@ -233,10 +234,9 @@ export default async function Page({ searchParams }: Props) {
         <section className="inventory-cluster" key={cluster.key}>
           <header>
             <div>
-              <span>Cluster Proxmox</span>
+              <span>{cluster.clusterName ? "Cluster Proxmox" : "Endpoint Proxmox · cluster não identificado"}</span>
               <h2>
-                {cluster.nodes.map((node) => node.resource.name).join(" + ") ||
-                  "Armazenamento"}
+                {cluster.clusterName ?? cluster.endpoints[0]?.name ?? "Proxmox"}
               </h2>
             </div>
             <small>
@@ -244,6 +244,11 @@ export default async function Page({ searchParams }: Props) {
               nó(s)
             </small>
           </header>
+          {!cluster.clusterName && (
+            <p className="inventory-endpoints">
+              A API não retornou a identidade do cluster nesta coleta. Este endpoint é exibido separadamente.
+            </p>
+          )}
           <p className="inventory-endpoints">
             Endpoints:{" "}
             {cluster.endpoints

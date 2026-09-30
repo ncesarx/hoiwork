@@ -3,6 +3,7 @@ import type { InfrastructureAsset, ProxmoxInstance } from "@prisma/client";
 type Asset = Pick<
   InfrastructureAsset,
   | "externalId"
+  | "clusterName"
   | "assetType"
   | "name"
   | "nodeName"
@@ -30,6 +31,7 @@ export type InventoryResource = {
 
 export type InventoryCluster = {
   key: string;
+  clusterName: string | null;
   endpoints: Instance[];
   nodes: Array<{
     resource: InventoryResource;
@@ -49,15 +51,16 @@ function resourceId(asset: Asset, instanceId: string) {
   return asset.externalId.slice(`proxmox/${instanceId}/`.length);
 }
 
-// Endpoints with the same node membership describe the same cluster. Keep the
-// database's per-endpoint evidence intact and consolidate only the inventory.
+// Consolidate endpoints only with matching, observed cluster identity and
+// membership. Missing identity stays per endpoint to avoid merging sites that
+// happen to reuse node names. Keep per-endpoint database evidence intact.
 export function buildProxmoxInventory(
   instances: Instance[],
   assets: Asset[],
 ): InventoryCluster[] {
   const clusters = new Map<
     string,
-    { endpoints: Instance[]; resources: Map<string, InventoryResource> }
+    { clusterName: string | null; endpoints: Instance[]; resources: Map<string, InventoryResource> }
   >();
 
   for (const instance of instances) {
@@ -65,19 +68,26 @@ export function buildProxmoxInventory(
     const scoped = assets.filter((asset) =>
       asset.externalId.startsWith(prefix),
     );
+    const nodeAssets = scoped.filter((asset) => asset.assetType === "NODE");
     const memberNames = [
       ...new Set(
-        scoped
-          .filter((asset) => asset.assetType === "NODE")
-          .map((asset) => asset.name.toLowerCase()),
+        nodeAssets.map((asset) => asset.name.toLowerCase()),
       ),
     ].sort();
     if (memberNames.length === 0) continue;
 
-    const key = JSON.stringify(memberNames);
+    const names = new Set(
+      nodeAssets.map((asset) => asset.clusterName?.trim().toLowerCase() || ""),
+    );
+    const clusterName = names.size === 1 && !names.has("")
+      ? nodeAssets[0].clusterName?.trim() || null
+      : null;
+    const key = clusterName
+      ? JSON.stringify([clusterName.toLowerCase(), memberNames])
+      : `endpoint:${instance.id}`;
     let cluster = clusters.get(key);
     if (!cluster) {
-      cluster = { endpoints: [], resources: new Map() };
+      cluster = { clusterName, endpoints: [], resources: new Map() };
       clusters.set(key, cluster);
     }
     cluster.endpoints.push(instance);
@@ -142,6 +152,7 @@ export function buildProxmoxInventory(
 
     return {
       key,
+      clusterName: cluster.clusterName,
       endpoints: cluster.endpoints,
       nodes,
       clusterStorages: resources
