@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { decryptCredential } from "@/lib/proxmox/credentials";
 import { ProxmoxInstanceClient } from "@/integrations/proxmox/instance-client";
+import { collectProxmoxSnapshot } from "./proxmox-snapshot";
 
 function ns(instanceId: string, externalId: string) {
   return `proxmox/${instanceId}/${externalId}`;
@@ -35,15 +36,10 @@ export async function discoverProxmoxInstance(params: {
     allowSelfSigned: instance.allowSelfSigned,
   });
 
-  const version = await client.version();
-  const [nodes, guests, storages] = await Promise.all([
-    client.nodes(),
-    client.guests(),
-    client.storages(),
-  ]);
+  const { version, nodes, guests, storages, clusterStatus, networksByNode } =
+    await collectProxmoxSnapshot(client);
   // Cluster identity is optional for collection; without it the inventory
   // keeps this endpoint separate instead of guessing from node names alone.
-  const clusterStatus = await client.clusterStatus().catch(() => []);
   const clusterEntry = clusterStatus.find((entry) => entry.type === "cluster");
   const clusterName = clusterEntry?.name?.trim() ||
     (clusterEntry?.id && clusterEntry.id !== "cluster" ? clusterEntry.id.trim() : null);
@@ -209,20 +205,19 @@ export async function discoverProxmoxInstance(params: {
     });
   }
 
-  for (const node of nodes) {
-    const interfaces = await client.network(node.node);
+  for (const { nodeName, interfaces } of networksByNode) {
     for (const nic of interfaces) {
       if (!["bridge", "bond", "eth", "vlan", "OVSBridge", "OVSBond", "OVSPort", "OVSIntPort"].includes(nic.type ?? "")) {
         continue;
       }
 
       await save({
-        externalId: `network/${node.node}/${nic.iface}`,
+        externalId: `network/${nodeName}/${nic.iface}`,
         assetType: "NETWORK",
         name: nic.iface,
         status: nic.active === 1 ? "ONLINE" : "OFFLINE",
-        nodeName: node.node,
-        parentExternalId: `node/${node.node}`,
+        nodeName,
+        parentExternalId: `node/${nodeName}`,
         metadata: {
           interfaceType: nic.type,
           address: nic.address,
