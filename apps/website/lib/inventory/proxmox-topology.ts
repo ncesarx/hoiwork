@@ -33,6 +33,7 @@ export type InventoryResource = {
     instanceId: string;
     instanceName: string;
     status: string;
+    nodeName: string | null;
     lastSeenAt: Date;
   }>;
 };
@@ -42,6 +43,15 @@ export function hasRecentStatusConflict(resource: InventoryResource, evaluatedAt
     .filter((observation) => collectionFreshness(observation.lastSeenAt, evaluatedAt) === "RECENT")
     .map((observation) => observation.status.toUpperCase());
   return new Set(recentStatuses).size > 1;
+}
+
+export function hasRecentPlacementConflict(resource: InventoryResource, evaluatedAt: Date) {
+  if (resource.type !== "VM" && resource.type !== "LXC") return false;
+  const recentNodes = resource.observations
+    .filter((observation) => collectionFreshness(observation.lastSeenAt, evaluatedAt) === "RECENT")
+    .map((observation) => observation.nodeName?.trim().toLowerCase())
+    .filter((node): node is string => !!node);
+  return new Set(recentNodes).size > 1;
 }
 
 export type InventoryCluster = {
@@ -118,6 +128,7 @@ export function buildProxmoxInventory(
         instanceId: instance.id,
         instanceName: instance.name,
         status: asset.status,
+        nodeName: asset.nodeName,
         lastSeenAt: asset.lastSeenAt,
       };
       if (previous && previous.lastSeenAt >= asset.lastSeenAt) {

@@ -3,6 +3,7 @@ import { requireOrganization } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import {
   buildProxmoxInventory,
+  hasRecentPlacementConflict,
   hasRecentStatusConflict,
   type InventoryResource,
 } from "@/lib/inventory/proxmox-topology";
@@ -57,7 +58,8 @@ function ResourceList({
       <ul>
         {resources.map((resource) => {
           const freshness = collectionFreshness(resource.lastSeenAt, evaluatedAt);
-          const conflict = hasRecentStatusConflict(resource, evaluatedAt);
+          const statusConflict = hasRecentStatusConflict(resource, evaluatedAt);
+          const placementConflict = hasRecentPlacementConflict(resource, evaluatedAt);
           return (
             <li key={resource.key}>
               <div className="inventory-resource-description">
@@ -69,10 +71,11 @@ function ResourceList({
                 </small>
                 <ResourceEvidence resource={resource} evaluatedAt={evaluatedAt} />
               </div>
-              <span className={`inventory-resource-state${freshness === "RECENT" && !conflict ? "" : " is-stale"}`}>
+              <span className={`inventory-resource-state${freshness === "RECENT" && !statusConflict && !placementConflict ? "" : " is-stale"}`}>
                 {resource.type} · {resource.status}
                 {freshness !== "RECENT" && ` · ${freshnessLabel(freshness)}`}
-                {conflict && " · estados divergentes"}
+                {statusConflict && " · estados divergentes"}
+                {placementConflict && " · nós divergentes"}
               </span>
             </li>
           );
@@ -92,14 +95,16 @@ function ResourceEvidence({ resource, evaluatedAt }: {
       {resource.observations.length > 1 && (
         <details className="inventory-observations">
           <summary>
-            {hasRecentStatusConflict(resource, evaluatedAt)
-              ? "Comparar estados divergentes"
+            {hasRecentStatusConflict(resource, evaluatedAt) || hasRecentPlacementConflict(resource, evaluatedAt)
+              ? "Comparar observações divergentes"
               : `Comparar ${resource.observations.length} endpoints`}
           </summary>
           <ul>
             {resource.observations.map((observation) => (
               <li key={observation.instanceId}>
-                {observation.instanceName}: {observation.status} · {formatCollectionTime(observation.lastSeenAt)}
+                {observation.instanceName}: {observation.status}
+                {observation.nodeName && ` · nó ${observation.nodeName}`}
+                {" · "}{formatCollectionTime(observation.lastSeenAt)}
               </li>
             ))}
           </ul>

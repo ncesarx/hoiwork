@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildProxmoxInventory, hasRecentStatusConflict } from "./proxmox-topology";
+import { buildProxmoxInventory, hasRecentPlacementConflict, hasRecentStatusConflict } from "./proxmox-topology";
 
 type Instances = Parameters<typeof buildProxmoxInventory>[0];
 type Assets = Parameters<typeof buildProxmoxInventory>[1];
@@ -112,4 +112,32 @@ test("resources remain visible when the reported node is missing from the collec
   assert.equal(cluster.clusterName, null);
   assert.deepEqual(cluster.unassignedResources.map((resource) => resource.name), ["vmbr0", "works-www"]);
   assert.deepEqual(cluster.clusterStorages.map((resource) => resource.name), ["shared"]);
+});
+
+test("different recent VM nodes are reported even when both endpoints agree on status", () => {
+  const now = new Date("2026-09-28T13:18:41Z");
+  const instances: Instances = ["a", "b"].map((id) => ({
+    id, name: id, site: null, baseUrl: `https://${id}:8006`, status: "HEALTHY", lastSyncAt: now,
+  }));
+  const assets: Assets = instances.flatMap((instance) => [
+    ...["hoi", "homeoffice"].map((node) => ({
+      externalId: `proxmox/${instance.id}/node/${node}`, clusterName: "hoi-cloud",
+      assetType: "NODE", name: node, nodeName: node, status: "ONLINE",
+      ipAddress: null, metadata: { sourceExternalId: `node/${node}` }, lastSeenAt: now,
+    })),
+    {
+      externalId: `proxmox/${instance.id}/qemu/105`, clusterName: "hoi-cloud",
+      assetType: "VM", name: "works-www", nodeName: instance.id === "a" ? "hoi" : "homeoffice",
+      status: "RUNNING", ipAddress: null, metadata: { sourceExternalId: "qemu/105", vmid: 105 },
+      lastSeenAt: instance.id === "a" ? new Date(now.getTime() - 5 * 60_000) : now,
+    },
+  ]);
+
+  const cluster = buildProxmoxInventory(instances, assets)[0];
+  const guest = cluster.nodes.find((node) => node.resource.name === "homeoffice")?.guests[0];
+  assert.equal(guest?.nodeName, "homeoffice");
+  assert.deepEqual(guest?.observations.map((observation) => observation.nodeName), ["hoi", "homeoffice"]);
+  assert.equal(guest && hasRecentStatusConflict(guest, now), false);
+  assert.equal(guest && hasRecentPlacementConflict(guest, now), true);
+  assert.equal(guest && hasRecentPlacementConflict(guest, new Date(now.getTime() + 26 * 60_000)), false);
 });
