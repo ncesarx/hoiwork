@@ -6,6 +6,12 @@ import {
   type InventoryResource,
 } from "@/lib/inventory/proxmox-topology";
 import { DEMO_ASSET_IDS } from "@/lib/inventory/demo-assets";
+import {
+  COLLECTION_RECENT_MINUTES,
+  collectionFreshness,
+  formatCollectionTime,
+  type CollectionFreshness,
+} from "@/lib/inventory/freshness";
 import "./inventory.css";
 
 export const metadata = {
@@ -35,9 +41,11 @@ function matches(resource: InventoryResource, query: string, type: string) {
 function ResourceList({
   title,
   resources,
+  evaluatedAt,
 }: {
   title: string;
   resources: InventoryResource[];
+  evaluatedAt: Date;
 }) {
   if (!resources.length) return null;
   return (
@@ -46,29 +54,36 @@ function ResourceList({
         {title} <span>{resources.length}</span>
       </h4>
       <ul>
-        {resources.map((resource) => (
-          <li key={resource.key}>
-            <span>
-              <strong>{resource.name}</strong>
-              {resource.vmid != null && <small>VMID {resource.vmid}</small>}
-            </span>
-            <span className="inventory-resource-state">
-              {resource.type} · {resource.status}
-            </span>
-          </li>
-        ))}
+        {resources.map((resource) => {
+          const freshness = collectionFreshness(resource.lastSeenAt, evaluatedAt);
+          return (
+            <li key={resource.key}>
+              <span>
+                <strong>{resource.name}</strong>
+                <small>
+                  {resource.vmid != null && <>VMID {resource.vmid} · </>}
+                  visto em {formatCollectionTime(resource.lastSeenAt)}
+                </small>
+              </span>
+              <span className={`inventory-resource-state${freshness === "RECENT" ? "" : " is-stale"}`}>
+                {resource.type} · {resource.status}
+                {freshness !== "RECENT" && ` · ${freshnessLabel(freshness)}`}
+              </span>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
 }
 
-function formatSync(date: Date | null) {
-  if (!date) return "Ainda não sincronizado";
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-    timeZone: "America/Sao_Paulo",
-  }).format(date);
+function freshnessLabel(freshness: CollectionFreshness) {
+  switch (freshness) {
+    case "RECENT": return "recente";
+    case "STALE": return "coleta antiga";
+    case "NO_DATA": return "sem coleta";
+    case "CLOCK_SKEW": return "horário divergente";
+  }
 }
 
 export default async function Page({ searchParams }: Props) {
@@ -117,6 +132,7 @@ export default async function Page({ searchParams }: Props) {
       orderBy: { name: "asc" },
     }),
   ]);
+  const evaluatedAt = new Date();
 
   const clusters = buildProxmoxInventory(instances, resources);
   const inventory = clusters
@@ -193,6 +209,26 @@ export default async function Page({ searchParams }: Props) {
         <button>Filtrar</button>
       </form>
 
+      {instances.length > 0 && (
+        <section className="inventory-collection" aria-label="Atualização das fontes Proxmox">
+          <h2>Atualização Proxmox</h2>
+          <p>Coleta recente: até {COLLECTION_RECENT_MINUTES} minutos. Estados antigos são apresentados como último registro conhecido.</p>
+          <ul>
+            {instances.map((instance) => {
+              const freshness = collectionFreshness(instance.lastSyncAt, evaluatedAt);
+              return (
+                <li key={instance.id}>
+                  <strong>{instance.name}</strong>
+                  <span className={freshness === "RECENT" ? "" : "is-stale"}>
+                    {freshnessLabel(freshness)} · {formatCollectionTime(instance.lastSyncAt)}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       {inventory.map((cluster) => (
         <section className="inventory-cluster" key={cluster.key}>
           <header>
@@ -212,35 +248,45 @@ export default async function Page({ searchParams }: Props) {
             Endpoints:{" "}
             {cluster.endpoints
               .map((endpoint) =>
-                `${endpoint.name} (${endpoint.baseUrl}; última sincronização: ${formatSync(endpoint.lastSyncAt)})`,
+                `${endpoint.name} (${endpoint.baseUrl})`,
               )
               .join(" · ")}
           </p>
           <div className="inventory-node-grid">
-            {cluster.nodes.map((node) => (
-              <article key={node.resource.key} className="inventory-node">
-                <div className="inventory-node-heading">
-                  <div>
-                    <span>Nó Proxmox</span>
-                    <h3>{node.resource.name}</h3>
+            {cluster.nodes.map((node) => {
+              const freshness = collectionFreshness(node.resource.lastSeenAt, evaluatedAt);
+              return (
+                <article key={node.resource.key} className="inventory-node">
+                  <div className="inventory-node-heading">
+                    <div>
+                      <span>Nó Proxmox</span>
+                      <h3>{node.resource.name}</h3>
+                      <small>Visto em {formatCollectionTime(node.resource.lastSeenAt)}</small>
+                    </div>
+                    <strong className={freshness === "RECENT" ? "" : "is-stale"}>
+                      {node.resource.status}
+                      {freshness !== "RECENT" && ` · ${freshnessLabel(freshness)}`}
+                    </strong>
                   </div>
-                  <strong>{node.resource.status}</strong>
-                </div>
-                <ResourceList
-                  title="Máquinas virtuais e contêineres"
-                  resources={node.guests}
-                />
-                <ResourceList title="Storages" resources={node.storages} />
-                <ResourceList
-                  title="Interfaces de rede"
-                  resources={node.networks}
-                />
-              </article>
-            ))}
+                  <ResourceList
+                    title="Máquinas virtuais e contêineres"
+                    resources={node.guests}
+                    evaluatedAt={evaluatedAt}
+                  />
+                  <ResourceList title="Storages" resources={node.storages} evaluatedAt={evaluatedAt} />
+                  <ResourceList
+                    title="Interfaces de rede"
+                    resources={node.networks}
+                    evaluatedAt={evaluatedAt}
+                  />
+                </article>
+              );
+            })}
           </div>
           <ResourceList
             title="Storages do cluster"
             resources={cluster.clusterStorages}
+            evaluatedAt={evaluatedAt}
           />
         </section>
       ))}
