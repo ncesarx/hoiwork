@@ -34,7 +34,7 @@ export async function createInvitation(input: {
       where: { userId_organizationId: { userId: input.actorUserId, organizationId: input.organizationId } },
       include: { user: { select: { active: true } } },
     });
-    if (!organization?.active || actor?.role !== "ADMIN" || !actor.user.active) {
+    if (!organization?.active || actor?.role !== "ADMIN" || !actor.active || !actor.user.active) {
       throw new InvitationError("Somente ADMIN ativo pode criar convites.", 403);
     }
     if (await tx.user.findUnique({ where: { email }, select: { id: true } })) {
@@ -94,7 +94,7 @@ export async function revokeInvitation(input: {
       where: { userId_organizationId: { userId: input.actorUserId, organizationId: input.organizationId } },
       include: { user: { select: { active: true } } },
     });
-    if (!organization?.active || actor?.role !== "ADMIN" || !actor.user.active) {
+    if (!organization?.active || actor?.role !== "ADMIN" || !actor.active || !actor.user.active) {
       throw new InvitationError("Somente ADMIN ativo pode revogar convites.", 403);
     }
     // The activation transaction locks this row too; exactly one operation wins.

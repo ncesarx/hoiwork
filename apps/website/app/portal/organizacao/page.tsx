@@ -3,6 +3,7 @@ import { requireOrganization } from "@/lib/authz";
 import { getOrganizationMembers } from "@/lib/organization/access";
 import { listOrganizationInvitations } from "@/lib/organization/invitations";
 import { MemberRoleEditor } from "./member-role-editor";
+import { MemberAccessButton } from "./member-access-button";
 import { InvitationForm } from "./invitation-form";
 import { RevokeInvitationButton } from "./revoke-invitation-button";
 import styles from "./page.module.css";
@@ -73,22 +74,23 @@ export default async function OrganizationAccessPage() {
         <div className={styles.heading}>
           <div>
             <h2 id="members-title">Usuários e permissões</h2>
-            <p>Usuários inativos não podem acessar o portal. Alterações de papel são registradas em auditoria.</p>
+            <p>Suspensões e alterações de papel são registradas em auditoria e afetam o acesso imediatamente.</p>
           </div>
           <span>ADMIN</span>
         </div>
         <div className={styles.tableWrap}>
           <table>
-            <thead><tr><th>Usuário</th><th>E-mail</th><th>Papel</th><th>Estado</th><th>Vinculado em</th><th>Ajustar papel</th></tr></thead>
+            <thead><tr><th>Usuário</th><th>E-mail</th><th>Papel</th><th>Estado</th><th>Vinculado em</th><th>Ajustar papel</th><th>Acesso</th></tr></thead>
             <tbody>
               {members.map((member) => (
                 <tr key={member.id}>
                   <td>{member.user.name?.trim() || "Sem nome"}</td>
                   <td>{member.user.email}</td>
                   <td>{member.role}</td>
-                  <td>{member.user.active ? "Ativo" : "Inativo"}</td>
+                  <td>{!member.user.active ? "Conta inativa" : member.active ? "Ativo" : "Suspenso"}</td>
                   <td>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" }).format(member.createdAt)}</td>
                   <td><MemberRoleEditor membershipId={member.id} currentRole={member.role} self={member.userId === session.user.id} /></td>
+                  <td><MemberAccessButton membershipId={member.id} active={member.active} userActive={member.user.active} self={member.userId === session.user.id} /></td>
                 </tr>
               ))}
             </tbody>

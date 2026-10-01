@@ -33,7 +33,7 @@ export async function changeMemberRole(input: {
       },
       include: { user: { select: { active: true } } },
     });
-    if (actor?.role !== "ADMIN" || !actor.user.active) {
+    if (actor?.role !== "ADMIN" || !actor.active || !actor.user.active) {
       throw new MembershipRoleChangeError("Somente ADMIN pode alterar papéis.", 403);
     }
 
@@ -49,9 +49,10 @@ export async function changeMemberRole(input: {
     }
     if (target.role === input.role) return { changed: false, role: target.role };
 
-    if (target.role === "ADMIN" && input.role !== "ADMIN") {
+    const targetUser = await tx.user.findUnique({ where: { id: target.userId }, select: { active: true } });
+    if (target.role === "ADMIN" && input.role !== "ADMIN" && target.active && targetUser?.active) {
       const admins = await tx.membership.count({
-        where: { organizationId: input.organizationId, role: "ADMIN" },
+        where: { organizationId: input.organizationId, role: "ADMIN", active: true, user: { active: true } },
       });
       if (admins <= 1) {
         throw new MembershipRoleChangeError("O último ADMIN deve permanecer na organização.", 409);

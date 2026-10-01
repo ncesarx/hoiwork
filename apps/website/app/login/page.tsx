@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { getActiveMembership } from "@/lib/organization/access";
 import { LoginForm } from "@/components/auth/login-form";
 import "./login.css";
 
@@ -10,7 +11,10 @@ export const metadata = {
 
 export default async function PortalLoginPage() {
   const session = await auth();
-  if (session?.user) redirect("/portal");
+  if (session?.user?.id && session.user.organizationId) {
+    const membership = await getActiveMembership(session.user.id, session.user.organizationId);
+    if (membership) redirect("/portal");
+  }
 
   return (
     <main className="auth-page">

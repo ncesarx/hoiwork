@@ -51,6 +51,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           },
           include: {
             memberships: {
+              where: { active: true, organization: { active: true } },
               include: {
                 organization: true,
               },
@@ -76,15 +77,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         const membership = user.memberships[0];
+        if (!membership) return null;
 
         return {
           id: user.id,
           name: user.name,
           email: user.email,
           image: user.image,
-          role: membership?.role ?? "CLIENT",
-          organizationId: membership?.organizationId ?? null,
-          organizationName: membership?.organization.name ?? null,
+          role: membership.role,
+          organizationId: membership.organizationId,
+          organizationName: membership.organization.name,
         };
       },
     }),

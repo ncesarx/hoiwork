@@ -9,7 +9,7 @@ export async function getActiveMembership(userId: string, organizationId: string
     },
   });
 
-  if (!membership?.organization.active || !membership.user.active) return null;
+  if (!membership?.active || !membership.organization.active || !membership.user.active) return null;
   return membership;
 }
 
@@ -20,6 +20,7 @@ export async function getOrganizationMembers(organizationId: string) {
       id: true,
       userId: true,
       role: true,
+      active: true,
       createdAt: true,
       user: {
         select: {
