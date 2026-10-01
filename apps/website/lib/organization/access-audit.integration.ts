@@ -57,9 +57,17 @@ test("access history is tenant-scoped and never returns raw metadata or invitati
         entity: "OrganizationInvitation", entityId: replacement.id,
         metadata: { replacedInvitationId: invite.id, secret: "must-not-display" },
       } }),
+      prisma.auditLog.create({ data: {
+        organizationId: organization.id, userId: actor.id, action: "ACCOUNT_SIGNED_IN",
+        entity: "User", entityId: actor.id,
+      } }),
+      prisma.auditLog.create({ data: {
+        organizationId: organization.id, userId: actor.id, action: "ACCOUNT_SIGNED_OUT",
+        entity: "User", entityId: actor.id,
+      } }),
     ]);
     const events = await listAccessAudit(organization.id);
-    assert.equal(events.length, 4);
+    assert.equal(events.length, 6);
     assert.equal((await listAccessAudit(organization.id, { limit: 1 })).length, 1);
     assert.equal((await listAccessAudit(organization.id, { from: new Date(Date.now() + 60_000) })).length, 0);
     const roleEvent = events.find((event) => event.action === "Papel alterado");
@@ -70,6 +78,8 @@ test("access history is tenant-scoped and never returns raw metadata or invitati
     assert.equal(inviteEvent?.target, invite.email);
     assert.equal(events.find((event) => event.action === "Convite revogado")?.details, "Substituído; link anterior invalidado");
     assert.equal(events.find((event) => event.action === "Convite criado" && event.details !== null)?.details, "Novo link após correção");
+    assert.equal(events.find((event) => event.action === "Entrada no portal")?.target, actor.email);
+    assert.equal(events.find((event) => event.action === "Saída do portal")?.target, actor.email);
     assert.ok(events.every((event) => !event.actor.includes("must-not-display")));
     assert.equal(JSON.stringify(events).includes("must-not-display"), false);
     assert.equal(JSON.stringify(events).includes("private-token-never-display"), false);

@@ -28,7 +28,7 @@ export const manualSections = [
       "Em Convites recentes, acompanhe os estados pendente, aceito, expirado e revogado. Revogue um convite pendente se o link tiver sido compartilhado por engano; para gerar outro link após a revogação, crie um novo convite.",
       "Para corrigir nome, e-mail ou papel de um convite pendente, use Corrigir convite pendente. O link anterior é invalidado, e o novo link deve ser copiado e enviado ao destinatário por um canal seguro.",
       "O ADMIN pode suspender e reativar o vínculo de outro usuário em Organização e acessos. Uma suspensão impede novos logins nesse vínculo e bloqueia sessões existentes nas rotas da organização. O último ADMIN ativo permanece protegido.",
-      "Consulte Histórico de acessos, na mesma página, para ver as 50 alterações mais recentes em convites, papéis e suspensões, com nome e e-mail do responsável, destinatário e indicação de convites substituídos.",
+      "Consulte Histórico de acessos, na mesma página, para ver as 50 ocorrências mais recentes: entradas e saídas pelo portal, troca de organização, convites, papéis e suspensões. O responsável aparece com nome e e-mail.",
       "Cada usuário pode alterar a própria senha em Minha conta. A troca exige a senha atual e encerra o acesso das sessões anteriores; entre novamente com a nova senha.",
       "O ADMIN pode exportar Histórico de acessos em CSV por período UTC. Sem datas, o relatório usa os últimos 90 dias; o limite é de 1000 eventos por arquivo.",
       "Valide o primeiro login com o usuário do cliente e confirme com o administrador que ele está vinculado à organização correta.",

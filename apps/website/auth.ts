@@ -6,6 +6,8 @@ import { compare } from "bcryptjs";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
+import { getSelectedMembership } from "@/lib/organization/access";
+import { preferredOrganizationFromCookieHeader } from "@/lib/organization/login-context";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -36,7 +38,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         },
       },
 
-      async authorize(rawCredentials) {
+      async authorize(rawCredentials, request) {
         const parsed = credentialsSchema.safeParse(rawCredentials);
 
         if (!parsed.success) {
@@ -78,20 +80,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const membership = user.memberships[0];
         if (!membership) return null;
+        const preferredId = preferredOrganizationFromCookieHeader(request.headers.get("cookie"));
+        const selected = await getSelectedMembership(user.id, preferredId, membership.organizationId);
+        if (!selected) return null;
 
         return {
           id: user.id,
           name: user.name,
           email: user.email,
           image: user.image,
-          role: membership.role,
-          organizationId: membership.organizationId,
-          organizationName: membership.organization.name,
-          sessionVersion: user.sessionVersion,
+          role: selected.role,
+          organizationId: selected.organizationId,
+          organizationName: selected.organization.name,
+          sessionVersion: selected.user.sessionVersion,
         };
       },
     }),
   ],
+
+  events: {
+    async signIn({ user, account }) {
+      if (account?.provider !== "credentials" || !user.id || !user.organizationId) return;
+      await prisma.auditLog.create({ data: {
+        organizationId: user.organizationId, userId: user.id,
+        action: "ACCOUNT_SIGNED_IN", entity: "User", entityId: user.id,
+      } });
+    },
+  },
 
   callbacks: {
     async jwt({ token, user }) {
