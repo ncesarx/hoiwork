@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { OrganizationSwitcher } from "./organization-switcher";
+import { SignOutButton } from "./sign-out-button";
 
 const items = [
   ["/portal", "Dashboard", "◫"],
@@ -74,6 +75,7 @@ export function PortalShell({
           <div className="portal-user">
             <OrganizationSwitcher currentId={organizationId} options={organizations} />
             <span>HO</span><div><strong>{userName}</strong><small>{organizationName}</small></div>
+            <SignOutButton />
           </div>
         </header>
         <main className="portal-main">{children}</main>

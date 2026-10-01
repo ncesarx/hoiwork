@@ -24,6 +24,7 @@ export const manualSections = [
       "O administrador pode consultar usuários vinculados e alterar seus papéis em Organização e acessos. A alteração do próprio papel é bloqueada e cada mudança é auditada.",
       "O ADMIN cria um convite em Organização e acessos e compartilha o link por um canal seguro. O link vence em 24 horas e só funciona uma vez. Um novo usuário define uma senha; quem já possui conta confirma a senha atual para aceitar um vínculo adicional.",
       "Se você tem acesso a mais de uma organização, use o seletor Organização no cabeçalho para alternar o contexto. Cada troca valida seu vínculo ativo.",
+      "Ao terminar, use Sair no cabeçalho. Isso encerra a sessão e limpa a organização selecionada neste navegador.",
       "Em Convites recentes, acompanhe os estados pendente, aceito, expirado e revogado. Revogue um convite pendente se o link tiver sido compartilhado por engano; para gerar outro link após a revogação, crie um novo convite.",
       "O ADMIN pode suspender e reativar o vínculo de outro usuário em Organização e acessos. Uma suspensão impede novos logins nesse vínculo e bloqueia sessões existentes nas rotas da organização. O último ADMIN ativo permanece protegido.",
       "Consulte Histórico de acessos, na mesma página, para ver as 50 alterações mais recentes em convites, papéis e suspensões, com responsável e destinatário.",
