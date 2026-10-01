@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { requireOrganization } from "@/lib/authz";
 import { getOrganizationMembers } from "@/lib/organization/access";
+import { listOrganizationInvitations } from "@/lib/organization/invitations";
 import { MemberRoleEditor } from "./member-role-editor";
 import { InvitationForm } from "./invitation-form";
+import { RevokeInvitationButton } from "./revoke-invitation-button";
 import styles from "./page.module.css";
 
 export const metadata = {
@@ -14,7 +16,13 @@ export default async function OrganizationAccessPage() {
   const { organization, membership, session } = await requireOrganization();
   if (membership.role !== "ADMIN") notFound();
 
-  const members = await getOrganizationMembers(organization.id);
+  const [members, invitations] = await Promise.all([
+    getOrganizationMembers(organization.id),
+    listOrganizationInvitations(organization.id),
+  ]);
+  const formatDate = (date: Date) => new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo",
+  }).format(date);
 
   return (
     <>
@@ -36,6 +44,29 @@ export default async function OrganizationAccessPage() {
           <p>O link vale por 24 horas e só pode ser usado uma vez. Envie-o ao destinatário por um canal seguro.</p>
         </div></div>
         <InvitationForm />
+      </section>
+
+      <section className={styles.panel} aria-labelledby="invitations-title">
+        <div className={styles.heading}><div>
+          <h2 id="invitations-title">Convites recentes</h2>
+          <p>Últimos 50 convites da organização. Os links de ativação não são recuperáveis depois da criação.</p>
+        </div></div>
+        <div className={styles.tableWrap}>
+          <table>
+            <thead><tr><th>Destinatário</th><th>E-mail</th><th>Papel</th><th>Criado em</th><th>Validade</th><th>Estado</th><th>Ação</th></tr></thead>
+            <tbody>
+              {invitations.map((invite) => (
+                <tr key={invite.id}>
+                  <td>{invite.name}</td><td>{invite.email}</td><td>{invite.role}</td>
+                  <td>{formatDate(invite.createdAt)}</td><td>{formatDate(invite.expiresAt)}</td>
+                  <td>{invite.state}</td>
+                  <td>{invite.state === "Pendente" ? <RevokeInvitationButton id={invite.id} /> : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {invitations.length === 0 ? <p>Nenhum convite criado nesta organização.</p> : null}
       </section>
 
       <section className={styles.panel} aria-labelledby="members-title">

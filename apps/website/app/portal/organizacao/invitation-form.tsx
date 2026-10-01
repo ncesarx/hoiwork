@@ -1,9 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import styles from "./page.module.css";
 
 export function InvitationForm() {
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [link, setLink] = useState("");
@@ -27,6 +29,7 @@ export function InvitationForm() {
       setLink(`${url.toString()}#token=${encodeURIComponent(result.token)}`);
       setMessage("Convite criado. Copie o link agora; ele não será exibido novamente.");
       form.reset();
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Falha ao criar convite.");
     } finally {
