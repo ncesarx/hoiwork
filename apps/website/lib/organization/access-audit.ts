@@ -63,15 +63,21 @@ export async function listAccessAudit(organizationId: string, options: {
     const next = "newRole" in metadata ? metadata.newRole : null;
     const roleChange = log.action === "MEMBERSHIP_ROLE_CHANGED" && typeof previous === "string" && typeof next === "string" && roles.has(previous) && roles.has(next)
       ? `${previous} → ${next}` : null;
+    const replacement = log.action === "ORGANIZATION_INVITATION_REVOKED" && "reason" in metadata && metadata.reason === "REPLACED"
+      ? "Substituído; link anterior invalidado"
+      : log.action === "ORGANIZATION_INVITATION_CREATED" && "replacedInvitationId" in metadata && typeof metadata.replacedInvitationId === "string"
+        ? "Novo link após correção"
+        : null;
+    const actorName = log.user?.name?.trim();
     return {
       id: log.id,
       createdAt: log.createdAt,
       action: labels[log.action] ?? "Alteração de acesso",
-      actor: log.user?.name?.trim() || log.user?.email || "Usuário removido",
+      actor: actorName && log.user?.email ? `${actorName} <${log.user.email}>` : log.user?.email || "Usuário removido",
       target: log.entity === "User" && log.entityId === log.user?.id
         ? log.user.email
         : log.entityId ? targets.get(log.entityId) ?? "Registro removido" : "Registro removido",
-      details: roleChange,
+      details: roleChange ?? replacement,
     };
   });
 }

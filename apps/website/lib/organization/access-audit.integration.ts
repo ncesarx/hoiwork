@@ -23,6 +23,11 @@ test("access history is tenant-scoped and never returns raw metadata or invitati
       role: "CLIENT", invitedById: actor.id, tokenHash: `private-digest-${suffix}`,
       expiresAt: new Date(Date.now() + 60_000),
     } });
+    const replacement = await prisma.organizationInvitation.create({ data: {
+      organizationId: organization.id, email: invite.email, name: "Invitee corrected",
+      role: "TECHNICIAN", invitedById: actor.id, tokenHash: `replacement-digest-${suffix}`,
+      expiresAt: new Date(Date.now() + 60_000),
+    } });
     await Promise.all([
       prisma.auditLog.create({ data: {
         organizationId: organization.id, userId: actor.id, action: "ORGANIZATION_INVITATION_CREATED",
@@ -42,20 +47,35 @@ test("access history is tenant-scoped and never returns raw metadata or invitati
         organizationId: organization.id, userId: actor.id, action: "UNRELATED_SYSTEM_EVENT",
         entity: "Membership", entityId: membership.id,
       } }),
+      prisma.auditLog.create({ data: {
+        organizationId: organization.id, userId: actor.id, action: "ORGANIZATION_INVITATION_REVOKED",
+        entity: "OrganizationInvitation", entityId: invite.id,
+        metadata: { reason: "REPLACED", replacementId: replacement.id, secret: "must-not-display" },
+      } }),
+      prisma.auditLog.create({ data: {
+        organizationId: organization.id, userId: actor.id, action: "ORGANIZATION_INVITATION_CREATED",
+        entity: "OrganizationInvitation", entityId: replacement.id,
+        metadata: { replacedInvitationId: invite.id, secret: "must-not-display" },
+      } }),
     ]);
     const events = await listAccessAudit(organization.id);
-    assert.equal(events.length, 2);
+    assert.equal(events.length, 4);
     assert.equal((await listAccessAudit(organization.id, { limit: 1 })).length, 1);
     assert.equal((await listAccessAudit(organization.id, { from: new Date(Date.now() + 60_000) })).length, 0);
     const roleEvent = events.find((event) => event.action === "Papel alterado");
-    const inviteEvent = events.find((event) => event.action === "Convite criado");
-    assert.equal(roleEvent?.actor, "Responsável");
+    const inviteEvent = events.find((event) => event.action === "Convite criado" && event.details === null);
+    assert.equal(roleEvent?.actor, `Responsável <${actor.email}>`);
     assert.equal(roleEvent?.target, target.email);
     assert.equal(roleEvent?.details, "CLIENT → TECHNICIAN");
     assert.equal(inviteEvent?.target, invite.email);
+    assert.equal(events.find((event) => event.action === "Convite revogado")?.details, "Substituído; link anterior invalidado");
+    assert.equal(events.find((event) => event.action === "Convite criado" && event.details !== null)?.details, "Novo link após correção");
+    assert.ok(events.every((event) => !event.actor.includes("must-not-display")));
     assert.equal(JSON.stringify(events).includes("must-not-display"), false);
     assert.equal(JSON.stringify(events).includes("private-token-never-display"), false);
     assert.equal(JSON.stringify(events).includes("private-digest"), false);
+    assert.equal(JSON.stringify(events).includes("replacement-digest"), false);
+    assert.equal(JSON.stringify(events).includes(replacement.id), false);
     const outsiderEvents = await listAccessAudit(other.id);
     assert.equal(outsiderEvents.length, 1);
     assert.equal(outsiderEvents[0].target, "Registro removido");
