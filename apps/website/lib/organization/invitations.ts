@@ -122,6 +122,68 @@ export async function revokeInvitation(input: {
   });
 }
 
+export async function replaceInvitation(input: {
+  organizationId: string;
+  actorUserId: string;
+  invitationId: string;
+  name: string;
+  email: string;
+  role: Exclude<MembershipRole, "ADMIN">;
+}) {
+  const email = input.email.trim().toLowerCase();
+  const token = randomBytes(32).toString("base64url");
+  const expiresAt = new Date(Date.now() + HOURS * 60 * 60 * 1000);
+
+  const created = await prisma.$transaction(async (tx) => {
+    const [organization] = await tx.$queryRaw<Array<{ active: boolean }>>`
+      SELECT "active" FROM "Organization" WHERE "id" = ${input.organizationId} FOR UPDATE
+    `;
+    const actor = await tx.membership.findUnique({
+      where: { userId_organizationId: { userId: input.actorUserId, organizationId: input.organizationId } },
+      include: { user: { select: { active: true } } },
+    });
+    if (!organization?.active || actor?.role !== "ADMIN" || !actor.active || !actor.user.active) {
+      throw new InvitationError("Somente ADMIN ativo pode substituir convites.", 403);
+    }
+    const [locked] = await tx.$queryRaw<Array<{ id: string }>>`
+      SELECT "id" FROM "OrganizationInvitation"
+      WHERE "id" = ${input.invitationId} AND "organizationId" = ${input.organizationId} FOR UPDATE
+    `;
+    if (!locked) throw new InvitationError("Convite não encontrado.", 404);
+    const previous = await tx.organizationInvitation.findUniqueOrThrow({ where: { id: locked.id } });
+    if (previous.acceptedAt || previous.revokedAt || previous.expiresAt <= new Date()) {
+      throw new InvitationError("Este convite não está pendente.", 409);
+    }
+    const existingUser = await tx.user.findUnique({ where: { email }, select: { id: true, active: true } });
+    if (existingUser && (!existingUser.active || await tx.membership.findUnique({
+      where: { userId_organizationId: { userId: existingUser.id, organizationId: input.organizationId } },
+      select: { id: true },
+    }))) throw new InvitationError("Este e-mail já possui vínculo ou está indisponível.", 409);
+    const conflicting = await tx.organizationInvitation.findFirst({
+      where: { organizationId: input.organizationId, email, id: { not: previous.id },
+        acceptedAt: null, revokedAt: null, expiresAt: { gt: new Date() } },
+      select: { id: true },
+    });
+    if (conflicting) throw new InvitationError("Já existe um convite válido para este e-mail.", 409);
+
+    await tx.organizationInvitation.update({ where: { id: previous.id }, data: { revokedAt: new Date() } });
+    const replacement = await tx.organizationInvitation.create({ data: {
+      organizationId: input.organizationId, invitedById: input.actorUserId,
+      name: input.name.trim(), email, role: input.role, tokenHash: tokenDigest(token), expiresAt,
+    } });
+    await tx.auditLog.createMany({ data: [
+      { organizationId: input.organizationId, userId: input.actorUserId,
+        action: "ORGANIZATION_INVITATION_REVOKED", entity: "OrganizationInvitation", entityId: previous.id,
+        metadata: { email: previous.email, role: previous.role, reason: "REPLACED", replacementId: replacement.id } },
+      { organizationId: input.organizationId, userId: input.actorUserId,
+        action: "ORGANIZATION_INVITATION_CREATED", entity: "OrganizationInvitation", entityId: replacement.id,
+        metadata: { email, role: input.role, expiresAt: expiresAt.toISOString(), replacedInvitationId: previous.id } },
+    ] });
+    return replacement;
+  });
+  return { token, expiresAt: created.expiresAt };
+}
+
 export async function acceptInvitation(input: { token: string; email: string; password: string }) {
   if (!/^[A-Za-z0-9_-]{43}$/.test(input.token)) {
     throw new InvitationError("Convite inválido ou expirado.", 400);

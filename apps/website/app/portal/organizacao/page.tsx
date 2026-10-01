@@ -7,6 +7,7 @@ import { MemberRoleEditor } from "./member-role-editor";
 import { MemberAccessButton } from "./member-access-button";
 import { InvitationForm } from "./invitation-form";
 import { RevokeInvitationButton } from "./revoke-invitation-button";
+import { ReplaceInvitationForm } from "./replace-invitation-form";
 import { AccessAuditExportForm } from "./access-audit-export-form";
 import styles from "./page.module.css";
 
@@ -44,10 +45,21 @@ export default async function OrganizationAccessPage() {
 
       <section className={styles.panel} aria-labelledby="invite-title">
         <div className={styles.heading}><div>
-          <h2 id="invite-title">Convidar novo usuário</h2>
+          <h2 id="invite-title">Convidar usuário</h2>
           <p>O link vale por 24 horas e só pode ser usado uma vez. Envie-o ao destinatário por um canal seguro.</p>
         </div></div>
         <InvitationForm />
+      </section>
+
+      <section className={styles.panel} aria-labelledby="replace-title">
+        <div className={styles.heading}><div>
+          <h2 id="replace-title">Corrigir convite pendente</h2>
+          <p>Corrija nome, e-mail ou papel. Ao gerar um novo link, o anterior deixa de funcionar.</p>
+        </div></div>
+        <ReplaceInvitationForm invitations={invitations.filter((invite) => invite.state === "Pendente").map((invite) => ({
+          id: invite.id, name: invite.name, email: invite.email, role: invite.role as "CLIENT" | "MANAGER" | "TECHNICIAN",
+        }))} />
+        {invitations.every((invite) => invite.state !== "Pendente") ? <p>Não há convites pendentes para corrigir.</p> : null}
       </section>
 
       <section className={styles.panel} aria-labelledby="invitations-title">

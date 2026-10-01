@@ -5,7 +5,7 @@ import { compare, hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { requireDisposableDatabase } from "@/lib/test-support/disposable-db";
 import { getActiveOrganizationsForUser, getSelectedMembership } from "./access";
-import { acceptInvitation, createInvitation, InvitationError, listOrganizationInvitations, revokeInvitation } from "./invitations";
+import { acceptInvitation, createInvitation, InvitationError, listOrganizationInvitations, replaceInvitation, revokeInvitation } from "./invitations";
 
 test("organization invite is scoped, hashed, single use, and provisions credentials with audit", async () => {
   requireDisposableDatabase();
@@ -195,5 +195,97 @@ test("existing account accepts a second organization with current password and s
     await prisma.auditLog.deleteMany({ where: { organizationId: { in: [first.id, second.id] } } });
     await Promise.all([prisma.organization.delete({ where: { id: first.id } }), prisma.organization.delete({ where: { id: second.id } })]);
     await prisma.user.deleteMany({ where: { id: { in: [admin.id, person.id] } } });
+  }
+});
+
+test("replacing a pending invite invalidates the old token and audits the new one", async () => {
+  requireDisposableDatabase();
+  const suffix = randomUUID();
+  const [organization, other] = await Promise.all([
+    prisma.organization.create({ data: { name: "Correction", slug: `correction-${suffix}` } }),
+    prisma.organization.create({ data: { name: "Other", slug: `other-correction-${suffix}` } }),
+  ]);
+  const [admin, outsider] = await Promise.all([
+    prisma.user.create({ data: { email: `admin-${suffix}@example.test` } }),
+    prisma.user.create({ data: { email: `outsider-${suffix}@example.test` } }),
+  ]);
+  const oldEmail = `old-${suffix}@example.test`;
+  const newEmail = `new-${suffix}@example.test`;
+  try {
+    await Promise.all([
+      prisma.membership.create({ data: { organizationId: organization.id, userId: admin.id, role: "ADMIN" } }),
+      prisma.membership.create({ data: { organizationId: other.id, userId: outsider.id, role: "ADMIN" } }),
+    ]);
+    const first = await createInvitation({
+      organizationId: organization.id, actorUserId: admin.id, name: "Wrong", email: oldEmail, role: "CLIENT",
+    });
+    const [oldInvite] = await listOrganizationInvitations(organization.id);
+    const replace = (actorUserId: string, organizationId = organization.id, email = newEmail) => replaceInvitation({
+      organizationId, actorUserId, invitationId: oldInvite.id, name: "Correct", email, role: "TECHNICIAN",
+    });
+    await assert.rejects(replace(outsider.id), (error) => error instanceof InvitationError && error.status === 403);
+    await assert.rejects(replace(outsider.id, other.id), (error) => error instanceof InvitationError && error.status === 404);
+    const duplicate = await createInvitation({
+      organizationId: organization.id, actorUserId: admin.id, name: "Already pending", email: newEmail, role: "CLIENT",
+    });
+    await assert.rejects(replace(admin.id), (error) => error instanceof InvitationError && error.status === 409);
+    await assert.rejects(replace(admin.id, organization.id, admin.email), (error) => error instanceof InvitationError && error.status === 409);
+    const [duplicateInvite] = (await listOrganizationInvitations(organization.id)).filter((invite) => invite.email === newEmail);
+    await revokeInvitation({ organizationId: organization.id, actorUserId: admin.id, invitationId: duplicateInvite.id });
+    const next = await replace(admin.id);
+    assert.notEqual(next.token, first.token);
+    assert.notEqual(next.token, duplicate.token);
+    assert.ok(next.expiresAt > new Date());
+    await assert.rejects(acceptInvitation({ token: first.token, email: oldEmail, password: "secure-password-123" }),
+      (error) => error instanceof InvitationError && error.status === 400);
+    assert.equal(await prisma.user.count({ where: { email: oldEmail } }), 0);
+    const [replacement] = await listOrganizationInvitations(organization.id);
+    assert.equal(replacement.name, "Correct");
+    assert.equal(replacement.role, "TECHNICIAN");
+    assert.equal(replacement.state, "Pendente");
+    assert.equal((await listOrganizationInvitations(organization.id)).find((invite) => invite.id === oldInvite.id)?.state, "Revogado");
+    await assert.rejects(replace(admin.id), (error) => error instanceof InvitationError && error.status === 409);
+    const activated = await acceptInvitation({ token: next.token, email: newEmail, password: "secure-password-123" });
+    const member = await prisma.membership.findUniqueOrThrow({
+      where: { userId_organizationId: { userId: activated.userId, organizationId: organization.id } },
+    });
+    assert.equal(member.role, "TECHNICIAN");
+    const events = await prisma.auditLog.findMany({ where: { organizationId: organization.id } });
+    assert.equal(events.filter((event) => event.entityId === oldInvite.id && event.action === "ORGANIZATION_INVITATION_REVOKED").length, 1);
+    assert.equal(events.filter((event) => event.entityId === replacement.id && event.action === "ORGANIZATION_INVITATION_CREATED").length, 1);
+    assert.equal(JSON.stringify(events).includes(next.token), false);
+  } finally {
+    await prisma.auditLog.deleteMany({ where: { organizationId: { in: [organization.id, other.id] } } });
+    await Promise.all([prisma.organization.delete({ where: { id: organization.id } }), prisma.organization.delete({ where: { id: other.id } })]);
+    await prisma.user.deleteMany({ where: { email: { in: [admin.email, outsider.email, oldEmail, newEmail] } } });
+  }
+});
+
+test("activation and replacement of one invite have exactly one winner", async () => {
+  requireDisposableDatabase();
+  const suffix = randomUUID();
+  const organization = await prisma.organization.create({ data: { name: "Replacement race", slug: `replace-race-${suffix}` } });
+  const admin = await prisma.user.create({ data: { email: `admin-${suffix}@example.test` } });
+  const email = `old-${suffix}@example.test`;
+  const newEmail = `new-${suffix}@example.test`;
+  try {
+    await prisma.membership.create({ data: { organizationId: organization.id, userId: admin.id, role: "ADMIN" } });
+    const { token } = await createInvitation({ organizationId: organization.id, actorUserId: admin.id, name: "Original", email, role: "CLIENT" });
+    const [oldInvite] = await listOrganizationInvitations(organization.id);
+    const results = await Promise.allSettled([
+      acceptInvitation({ token, email, password: "secure-password-123" }),
+      replaceInvitation({ organizationId: organization.id, actorUserId: admin.id,
+        invitationId: oldInvite.id, name: "Corrected", email: newEmail, role: "TECHNICIAN" }),
+    ]);
+    assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
+    assert.equal(results.filter((result) => result.status === "rejected" && result.reason instanceof InvitationError).length, 1);
+    const saved = await prisma.organizationInvitation.findUniqueOrThrow({ where: { id: oldInvite.id } });
+    assert.equal(Boolean(saved.acceptedAt) !== Boolean(saved.revokedAt), true);
+    assert.equal(await prisma.user.count({ where: { email } }), saved.acceptedAt ? 1 : 0);
+    assert.equal(await prisma.organizationInvitation.count({ where: { organizationId: organization.id, email: newEmail } }), saved.revokedAt ? 1 : 0);
+  } finally {
+    await prisma.auditLog.deleteMany({ where: { organizationId: organization.id } });
+    await prisma.organization.delete({ where: { id: organization.id } });
+    await prisma.user.deleteMany({ where: { email: { in: [admin.email, email, newEmail] } } });
   }
 });
