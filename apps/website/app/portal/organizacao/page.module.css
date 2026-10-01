@@ -19,3 +19,12 @@
 .editor button:disabled { cursor: not-allowed; opacity: .5; }
 .editor small { flex-basis: 100%; color: #c7d6df; }
 .self { color: #a9bac5; font-size: 12px; }
+.panel + .panel { margin-top: 26px; }
+.invitationForm { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+.invitationForm label { display: grid; gap: 6px; min-width: 190px; flex: 1; color: #c7d6df; font-size: 13px; }
+.invitationForm input, .invitationForm select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px; color: #f8f9fb; background: #06131d; font: inherit; }
+.invitationForm button { border: 0; border-radius: 8px; padding: 11px 14px; cursor: pointer; background: var(--gold2, #f1c45b); font-weight: 800; }
+.invitationForm button:disabled { cursor: not-allowed; opacity: .5; }
+.invitationForm p, .invitationLink { flex-basis: 100%; }
+.invitationLink { display: flex; align-items: end; gap: 10px; }
+.invitationLink label { min-width: 0; }

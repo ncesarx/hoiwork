@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireOrganization } from "@/lib/authz";
 import { getOrganizationMembers } from "@/lib/organization/access";
 import { MemberRoleEditor } from "./member-role-editor";
+import { InvitationForm } from "./invitation-form";
 import styles from "./page.module.css";
 
 export const metadata = {
@@ -28,6 +29,14 @@ export default async function OrganizationAccessPage() {
         <article><span>Identificador</span><strong>{organization.slug}</strong></article>
         <article><span>Usuários vinculados</span><strong>{members.length}</strong></article>
       </div>
+
+      <section className={styles.panel} aria-labelledby="invite-title">
+        <div className={styles.heading}><div>
+          <h2 id="invite-title">Convidar novo usuário</h2>
+          <p>O link vale por 24 horas e só pode ser usado uma vez. Envie-o ao destinatário por um canal seguro.</p>
+        </div></div>
+        <InvitationForm />
+      </section>
 
       <section className={styles.panel} aria-labelledby="members-title">
         <div className={styles.heading}>
