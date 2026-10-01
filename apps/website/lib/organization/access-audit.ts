@@ -12,6 +12,7 @@ const actions = [
   "ACCOUNT_SIGNED_IN",
   "ACCOUNT_SIGNED_OUT",
   "USER_SESSIONS_REVOKED",
+  "ACCOUNT_LOGIN_THROTTLED",
 ];
 
 const labels: Record<string, string> = {
@@ -26,6 +27,7 @@ const labels: Record<string, string> = {
   ACCOUNT_SIGNED_IN: "Entrada no portal",
   ACCOUNT_SIGNED_OUT: "Saída do portal",
   USER_SESSIONS_REVOKED: "Sessões encerradas",
+  ACCOUNT_LOGIN_THROTTLED: "Acesso temporariamente bloqueado",
 };
 
 const roles = new Set(["CLIENT", "MANAGER", "TECHNICIAN", "ADMIN"]);
@@ -40,7 +42,13 @@ const ownSecurityActions = [
 
 export async function listOwnSecurityActivity(userId: string) {
   const events = await prisma.auditLog.findMany({
-    where: { userId, entity: "User", entityId: userId, action: { in: ownSecurityActions } },
+    where: {
+      entity: "User", entityId: userId,
+      OR: [
+        { userId, action: { in: ownSecurityActions } },
+        { userId: null, action: "ACCOUNT_LOGIN_THROTTLED" },
+      ],
+    },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: 20,
     select: { id: true, createdAt: true, action: true, organization: { select: { name: true } } },
@@ -71,7 +79,8 @@ export async function listAccessAudit(organizationId: string, options: {
 
   const membershipIds = logs.filter((log) => log.entity === "Membership" && log.entityId).map((log) => log.entityId!);
   const invitationIds = logs.filter((log) => log.entity === "OrganizationInvitation" && log.entityId).map((log) => log.entityId!);
-  const [memberships, invitations] = await Promise.all([
+  const lockedUserIds = logs.filter((log) => log.action === "ACCOUNT_LOGIN_THROTTLED" && log.entity === "User" && log.entityId).map((log) => log.entityId!);
+  const [memberships, invitations, lockedUsers] = await Promise.all([
     prisma.membership.findMany({
       where: { organizationId, id: { in: membershipIds } },
       select: { id: true, user: { select: { email: true } } },
@@ -80,10 +89,15 @@ export async function listAccessAudit(organizationId: string, options: {
       where: { organizationId, id: { in: invitationIds } },
       select: { id: true, email: true },
     }),
+    prisma.user.findMany({
+      where: { id: { in: lockedUserIds }, memberships: { some: { organizationId } } },
+      select: { id: true, email: true },
+    }),
   ]);
   const targets = new Map<string, string>([
     ...memberships.map((member): [string, string] => [member.id, member.user.email]),
     ...invitations.map((invite): [string, string] => [invite.id, invite.email]),
+    ...lockedUsers.map((user): [string, string] => [user.id, user.email]),
   ]);
 
   return logs.map((log) => {
@@ -102,7 +116,8 @@ export async function listAccessAudit(organizationId: string, options: {
       id: log.id,
       createdAt: log.createdAt,
       action: labels[log.action] ?? "Alteração de acesso",
-      actor: actorName && log.user?.email ? `${actorName} <${log.user.email}>` : log.user?.email || "Usuário removido",
+      actor: log.action === "ACCOUNT_LOGIN_THROTTLED" ? "Acesso não autenticado"
+        : actorName && log.user?.email ? `${actorName} <${log.user.email}>` : log.user?.email || "Usuário removido",
       target: log.entity === "User" && log.entityId === log.user?.id
         ? log.user.email
         : log.entityId ? targets.get(log.entityId) ?? "Registro removido" : "Registro removido",

@@ -34,7 +34,7 @@ export default async function AccountPage() {
     </section>
     <section className={styles.panel} aria-labelledby="account-activity-title">
       <h2 id="account-activity-title">Atividade recente da conta</h2>
-      <p>As 20 atividades mais recentes da sua conta, incluindo entradas, saídas e alterações de segurança.</p>
+      <p>As 20 atividades mais recentes da sua conta, incluindo entradas, saídas, bloqueios temporários e alterações de segurança.</p>
       {activity.length ? <div className={styles.tableWrap}><table>
         <thead><tr><th>Quando</th><th>Atividade</th><th>Organização</th></tr></thead>
         <tbody>{activity.map((event) => <tr key={event.id}>

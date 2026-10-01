@@ -128,6 +128,15 @@ test("own security history is bounded across organizations and never includes an
     assert.equal(JSON.stringify(activity).includes("never-show"), false);
     assert.equal(JSON.stringify(activity).includes(other.id), false);
     assert.equal((await listOwnSecurityActivity(other.id)).length, 1);
+    await prisma.auditLog.createMany({ data: [
+      { organizationId: first.id, userId: null, action: "ACCOUNT_LOGIN_THROTTLED", entity: "User", entityId: user.id },
+      { organizationId: first.id, userId: other.id, action: "ACCOUNT_LOGIN_THROTTLED", entity: "User", entityId: user.id },
+      { organizationId: first.id, userId: null, action: "ACCOUNT_LOGIN_THROTTLED", entity: "User", entityId: other.id },
+    ] });
+    const withThrottling = await listOwnSecurityActivity(user.id);
+    assert.equal(withThrottling.length, 20);
+    assert.equal(withThrottling.filter((event) => event.action === "Acesso temporariamente bloqueado").length, 1);
+    assert.equal((await listOwnSecurityActivity(other.id)).filter((event) => event.action === "Acesso temporariamente bloqueado").length, 1);
   } finally {
     await prisma.auditLog.deleteMany({ where: { organizationId: { in: [first.id, second.id] } } });
     await Promise.all([prisma.organization.delete({ where: { id: first.id } }), prisma.organization.delete({ where: { id: second.id } })]);
