@@ -1,5 +1,6 @@
 .panel { max-width: 640px; border: 1px solid var(--line); border-radius: 12px; background: #ffffff06; padding: 24px; }
 .panel h2 { margin: 0 0 12px; }
+.panel + .panel { margin-top: 20px; }
 .panel p { color: #a9bac5; line-height: 1.6; }
 .form { display: grid; gap: 16px; margin-top: 24px; }
 .form label { display: grid; gap: 7px; color: #c7d6df; }

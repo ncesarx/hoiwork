@@ -11,6 +11,7 @@ const actions = [
   "ORGANIZATION_CONTEXT_CHANGED",
   "ACCOUNT_SIGNED_IN",
   "ACCOUNT_SIGNED_OUT",
+  "USER_SESSIONS_REVOKED",
 ];
 
 const labels: Record<string, string> = {
@@ -24,6 +25,7 @@ const labels: Record<string, string> = {
   ORGANIZATION_CONTEXT_CHANGED: "Organização selecionada",
   ACCOUNT_SIGNED_IN: "Entrada no portal",
   ACCOUNT_SIGNED_OUT: "Saída do portal",
+  USER_SESSIONS_REVOKED: "Sessões encerradas",
 };
 
 const roles = new Set(["CLIENT", "MANAGER", "TECHNICIAN", "ADMIN"]);
