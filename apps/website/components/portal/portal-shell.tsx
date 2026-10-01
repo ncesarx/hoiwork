@@ -16,6 +16,7 @@ const items = [
   ["/portal/documentos", "Documentos", "▤"],
   ["/portal/manutencoes", "Manutenções", "◇"],
   ["/portal/ajuda", "Ajuda", "?"],
+  ["/portal/conta", "Minha conta", "♙"],
 ];
 
 export function PortalShell({

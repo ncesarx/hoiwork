@@ -5,7 +5,7 @@ export async function getActiveMembership(userId: string, organizationId: string
     where: { userId_organizationId: { userId, organizationId } },
     include: {
       organization: true,
-      user: { select: { active: true } },
+      user: { select: { active: true, sessionVersion: true } },
     },
   });
 

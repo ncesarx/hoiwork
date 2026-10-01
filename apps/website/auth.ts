@@ -87,6 +87,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: membership.role,
           organizationId: membership.organizationId,
           organizationName: membership.organization.name,
+          sessionVersion: user.sessionVersion,
         };
       },
     }),
@@ -98,6 +99,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = user.role;
         token.organizationId = user.organizationId;
         token.organizationName = user.organizationName;
+        token.sessionVersion = user.sessionVersion;
       }
 
       return token;
@@ -121,6 +123,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           typeof token.organizationName === "string"
             ? token.organizationName
             : null;
+
+        // Existing JWTs predate this field; all users start at version zero.
+        session.user.sessionVersion =
+          typeof token.sessionVersion === "number" ? token.sessionVersion : 0;
       }
 
       return session;

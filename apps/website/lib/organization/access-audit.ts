@@ -7,6 +7,7 @@ const actions = [
   "ORGANIZATION_INVITATION_CREATED",
   "ORGANIZATION_INVITATION_ACCEPTED",
   "ORGANIZATION_INVITATION_REVOKED",
+  "USER_PASSWORD_CHANGED",
 ];
 
 const labels: Record<string, string> = {
@@ -16,6 +17,7 @@ const labels: Record<string, string> = {
   ORGANIZATION_INVITATION_CREATED: "Convite criado",
   ORGANIZATION_INVITATION_ACCEPTED: "Convite aceito",
   ORGANIZATION_INVITATION_REVOKED: "Convite revogado",
+  USER_PASSWORD_CHANGED: "Senha alterada",
 };
 
 const roles = new Set(["CLIENT", "MANAGER", "TECHNICIAN", "ADMIN"]);
@@ -27,7 +29,7 @@ export async function listAccessAudit(organizationId: string) {
     take: 50,
     select: {
       id: true, action: true, entity: true, entityId: true, createdAt: true, metadata: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { id: true, name: true, email: true } },
     },
   });
 
@@ -59,7 +61,9 @@ export async function listAccessAudit(organizationId: string) {
       createdAt: log.createdAt,
       action: labels[log.action] ?? "Alteração de acesso",
       actor: log.user?.name?.trim() || log.user?.email || "Usuário removido",
-      target: log.entityId ? targets.get(log.entityId) ?? "Registro removido" : "Registro removido",
+      target: log.entity === "User" && log.entityId === log.user?.id
+        ? log.user.email
+        : log.entityId ? targets.get(log.entityId) ?? "Registro removido" : "Registro removido",
       details: roleChange,
     };
   });

@@ -13,7 +13,7 @@ export default async function PortalLoginPage() {
   const session = await auth();
   if (session?.user?.id && session.user.organizationId) {
     const membership = await getActiveMembership(session.user.id, session.user.organizationId);
-    if (membership) redirect("/portal");
+    if (membership && session.user.sessionVersion === membership.user.sessionVersion) redirect("/portal");
   }
 
   return (

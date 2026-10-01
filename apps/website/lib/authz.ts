@@ -16,7 +16,9 @@ export const requireOrganization = cache(async () => {
 
   const membership = await getActiveMembership(session.user.id, organizationId);
 
-  if (!membership) redirect("/login?error=access");
+  if (!membership || session.user.sessionVersion !== membership.user.sessionVersion) {
+    redirect("/login?error=access");
+  }
   session.user.role = membership.role;
   session.user.organizationName = membership.organization.name;
   return { session, membership, organization: membership.organization };

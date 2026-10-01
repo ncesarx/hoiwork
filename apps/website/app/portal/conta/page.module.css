@@ -1,0 +1,9 @@
+.panel { max-width: 640px; border: 1px solid var(--line); border-radius: 12px; background: #ffffff06; padding: 24px; }
+.panel h2 { margin: 0 0 12px; }
+.panel p { color: #a9bac5; line-height: 1.6; }
+.form { display: grid; gap: 16px; margin-top: 24px; }
+.form label { display: grid; gap: 7px; color: #c7d6df; }
+.form input { min-height: 44px; border: 1px solid var(--line); border-radius: 8px; padding: 10px; color: #fff; background: #06131d; font: inherit; }
+.form button { min-height: 44px; border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; background: var(--gold2, #f1c45b); font-weight: 800; }
+.form button:disabled { opacity: .5; cursor: not-allowed; }
+.form p { color: #ffaaaa; }
