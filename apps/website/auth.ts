@@ -2,11 +2,11 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { MembershipRole } from "@prisma/client";
-import { compare } from "bcryptjs";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { getSelectedMembership } from "@/lib/organization/access";
+import { verifyCredentialLogin } from "@/lib/organization/credential-login";
 import { preferredOrganizationFromCookieHeader } from "@/lib/organization/login-context";
 
 const credentialsSchema = z.object({
@@ -69,12 +69,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const passwordIsValid = await compare(
-          parsed.data.password,
-          user.passwordHash,
-        );
-
-        if (!passwordIsValid) {
+        const verified = await verifyCredentialLogin(user.id, parsed.data.password);
+        if (!verified) {
           return null;
         }
 
@@ -92,7 +88,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: selected.role,
           organizationId: selected.organizationId,
           organizationName: selected.organization.name,
-          sessionVersion: selected.user.sessionVersion,
+          sessionVersion: verified.sessionVersion,
         };
       },
     }),

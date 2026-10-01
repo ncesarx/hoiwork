@@ -16,7 +16,7 @@ export async function authenticate(
   } catch (error) {
     if (error instanceof AuthError) {
       return error.type === "CredentialsSignin"
-        ? "E-mail ou senha inválidos."
+        ? "E-mail ou senha inválidos. Após várias tentativas, aguarde 15 minutos."
         : "Não foi possível realizar o acesso.";
     }
     throw error;
