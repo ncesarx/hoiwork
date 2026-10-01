@@ -22,11 +22,16 @@ const labels: Record<string, string> = {
 
 const roles = new Set(["CLIENT", "MANAGER", "TECHNICIAN", "ADMIN"]);
 
-export async function listAccessAudit(organizationId: string) {
+export async function listAccessAudit(organizationId: string, options: {
+  from?: Date; toExclusive?: Date; limit?: number;
+} = {}) {
   const logs = await prisma.auditLog.findMany({
-    where: { organizationId, action: { in: actions } },
+    where: {
+      organizationId, action: { in: actions },
+      createdAt: { gte: options.from, lt: options.toExclusive },
+    },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take: 50,
+    take: Math.min(Math.max(options.limit ?? 50, 1), 1001),
     select: {
       id: true, action: true, entity: true, entityId: true, createdAt: true, metadata: true,
       user: { select: { id: true, name: true, email: true } },

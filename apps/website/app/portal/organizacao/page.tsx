@@ -7,6 +7,7 @@ import { MemberRoleEditor } from "./member-role-editor";
 import { MemberAccessButton } from "./member-access-button";
 import { InvitationForm } from "./invitation-form";
 import { RevokeInvitationButton } from "./revoke-invitation-button";
+import { AccessAuditExportForm } from "./access-audit-export-form";
 import styles from "./page.module.css";
 
 export const metadata = {
@@ -106,6 +107,8 @@ export default async function OrganizationAccessPage() {
           <h2 id="audit-title">Histórico de acessos</h2>
           <p>Últimas 50 alterações de convites, papéis e suspensões desta organização.</p>
         </div></div>
+        <p>Exporte até 1000 eventos em um período de até 366 dias. Sem datas, o relatório cobre os últimos 90 dias.</p>
+        <AccessAuditExportForm />
         <div className={styles.tableWrap}>
           <table>
             <thead><tr><th>Quando</th><th>Ação</th><th>Responsável</th><th>Destinatário</th><th>Detalhes</th></tr></thead>

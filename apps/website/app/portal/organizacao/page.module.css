@@ -31,3 +31,9 @@
 .tableWrap td button { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; cursor: pointer; color: #f8f9fb; background: #23313a; font: inherit; }
 .tableWrap td button:disabled { opacity: .5; cursor: not-allowed; }
 .tableWrap td small { display: block; margin-top: 6px; color: #ffaaaa; }
+.auditExportForm { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin: 18px 0; }
+.auditExportForm label { display: grid; gap: 6px; color: #c7d6df; font-size: 13px; }
+.auditExportForm input { border: 1px solid var(--line); border-radius: 8px; padding: 9px; color: #f8f9fb; background: #06131d; color-scheme: dark; font: inherit; }
+.auditExportForm button { border: 0; border-radius: 8px; padding: 10px 14px; cursor: pointer; background: var(--gold2, #f1c45b); font-weight: 800; }
+.auditExportForm button:disabled { opacity: .5; cursor: not-allowed; }
+.auditExportForm small { flex-basis: 100%; color: #ffaaaa; }

@@ -45,6 +45,8 @@ test("access history is tenant-scoped and never returns raw metadata or invitati
     ]);
     const events = await listAccessAudit(organization.id);
     assert.equal(events.length, 2);
+    assert.equal((await listAccessAudit(organization.id, { limit: 1 })).length, 1);
+    assert.equal((await listAccessAudit(organization.id, { from: new Date(Date.now() + 60_000) })).length, 0);
     const roleEvent = events.find((event) => event.action === "Papel alterado");
     const inviteEvent = events.find((event) => event.action === "Convite criado");
     assert.equal(roleEvent?.actor, "Responsável");
