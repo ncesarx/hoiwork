@@ -13,6 +13,22 @@ export async function getActiveMembership(userId: string, organizationId: string
   return membership;
 }
 
+export async function getSelectedMembership(userId: string, preferredId: string | null, fallbackId: string | null) {
+  if (preferredId) {
+    const preferred = await getActiveMembership(userId, preferredId);
+    if (preferred) return preferred;
+  }
+  return fallbackId && fallbackId !== preferredId ? getActiveMembership(userId, fallbackId) : null;
+}
+
+export async function getActiveOrganizationsForUser(userId: string) {
+  return prisma.membership.findMany({
+    where: { userId, active: true, user: { active: true }, organization: { active: true } },
+    select: { organizationId: true, organization: { select: { name: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
 export async function getOrganizationMembers(organizationId: string) {
   return prisma.membership.findMany({
     where: { organizationId },

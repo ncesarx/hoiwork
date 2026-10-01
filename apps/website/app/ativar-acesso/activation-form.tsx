@@ -45,7 +45,7 @@ export function ActivationForm() {
   return (
     <form className="auth-form" onSubmit={submit}>
       <label><span>E-mail convidado</span><input name="email" type="email" required autoComplete="email" /></label>
-      <label><span>Nova senha (mínimo de 12 caracteres)</span><input name="password" type="password" required minLength={12} maxLength={128} autoComplete="new-password" /></label>
+      <label><span>Senha atual se você já tem conta; nova senha (mínimo de 12 caracteres) se ainda não tem</span><input name="password" type="password" required minLength={8} maxLength={128} autoComplete="off" /></label>
       {error ? <p role="alert">{error}</p> : null}
       <button type="submit" disabled={busy}>{busy ? "Ativando..." : "Ativar acesso"}</button>
     </form>

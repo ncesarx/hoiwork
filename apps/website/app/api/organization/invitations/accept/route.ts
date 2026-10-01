@@ -8,13 +8,13 @@ export const dynamic = "force-dynamic";
 const schema = z.object({
   token: z.string().min(1).max(128),
   email: z.email().max(254),
-  password: z.string().min(12).max(128),
+  password: z.string().min(8).max(128),
 }).strict();
 
 export async function POST(request: Request) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: "Informe e-mail, convite e senha com ao menos 12 caracteres." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Informe e-mail, convite e senha válida." }, { status: 400 });
   }
   try {
     await acceptInvitation(parsed.data);

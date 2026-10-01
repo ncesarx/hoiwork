@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { OrganizationSwitcher } from "./organization-switcher";
 
 const items = [
   ["/portal", "Dashboard", "◫"],
@@ -24,11 +25,15 @@ export function PortalShell({
   organizationName,
   userName,
   isAdmin,
+  organizationId,
+  organizations,
 }: {
   children: ReactNode;
   organizationName: string;
   userName: string;
   isAdmin: boolean;
+  organizationId: string;
+  organizations: { organizationId: string; organization: { name: string } }[];
 }) {
   const pathname = usePathname();
 
@@ -66,7 +71,10 @@ export function PortalShell({
       <div className="portal-content">
         <header className="portal-topbar">
           <div><small>Portal do Cliente</small><strong>Ambiente Corporativo</strong></div>
-          <div className="portal-user"><span>HO</span><div><strong>{userName}</strong><small>{organizationName}</small></div></div>
+          <div className="portal-user">
+            <OrganizationSwitcher currentId={organizationId} options={organizations} />
+            <span>HO</span><div><strong>{userName}</strong><small>{organizationName}</small></div>
+          </div>
         </header>
         <main className="portal-main">{children}</main>
       </div>

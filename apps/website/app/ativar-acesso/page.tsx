@@ -15,7 +15,7 @@ export default function ActivationPage() {
         <div className="auth-copy">
           <span>Convite da organização</span>
           <h1>Ative seu acesso.</h1>
-          <p>Informe o e-mail que recebeu o convite e defina uma senha. O link só pode ser usado uma vez.</p>
+          <p>Informe o e-mail convidado. Use sua senha atual se já tem conta ou crie uma senha com pelo menos 12 caracteres. O link só pode ser usado uma vez.</p>
         </div>
         <ActivationForm />
       </section>

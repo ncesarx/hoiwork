@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { hash } from "bcryptjs";
+import { compare, hash } from "bcryptjs";
 import type { MembershipRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
@@ -37,9 +37,11 @@ export async function createInvitation(input: {
     if (!organization?.active || actor?.role !== "ADMIN" || !actor.active || !actor.user.active) {
       throw new InvitationError("Somente ADMIN ativo pode criar convites.", 403);
     }
-    if (await tx.user.findUnique({ where: { email }, select: { id: true } })) {
-      throw new InvitationError("Este e-mail não está disponível para convite.", 409);
-    }
+    const existingUser = await tx.user.findUnique({ where: { email }, select: { id: true, active: true } });
+    if (existingUser && (!existingUser.active || await tx.membership.findUnique({
+      where: { userId_organizationId: { userId: existingUser.id, organizationId: input.organizationId } },
+      select: { id: true },
+    }))) throw new InvitationError("Este e-mail já possui vínculo ou está indisponível.", 409);
     const pending = await tx.organizationInvitation.findFirst({
       where: { organizationId: input.organizationId, email, acceptedAt: null, revokedAt: null, expiresAt: { gt: new Date() } },
       select: { id: true },
@@ -132,7 +134,11 @@ export async function acceptInvitation(input: { token: string; email: string; pa
   if (!available || available.acceptedAt || available.revokedAt || available.expiresAt <= new Date() || available.email !== email) {
     throw new InvitationError("Convite inválido ou expirado.", 400);
   }
-  const passwordHash = await hash(input.password, 12);
+  const existingBeforeLock = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+  if (!existingBeforeLock && input.password.length < 12) {
+    throw new InvitationError("A nova senha precisa ter ao menos 12 caracteres.", 400);
+  }
+  const passwordHash = existingBeforeLock ? null : await hash(input.password, 12);
 
   return prisma.$transaction(async (tx) => {
     // Match the organization-then-invitation lock order used by revocation.
@@ -152,21 +158,33 @@ export async function acceptInvitation(input: { token: string; email: string; pa
     if (invitation.acceptedAt || invitation.revokedAt || invitation.expiresAt <= new Date() || !invitation.organization.active || invitation.email !== email) {
       throw new InvitationError("Convite inválido ou expirado.", 400);
     }
-    if (await tx.user.findUnique({ where: { email }, select: { id: true } })) {
-      throw new InvitationError("Este e-mail não está disponível para ativação.", 409);
+    const existingUser = await tx.user.findUnique({ where: { email }, select: { id: true, active: true, passwordHash: true } });
+    let userId: string;
+    if (existingUser) {
+      if (!existingUser.active || !existingUser.passwordHash || !await compare(input.password, existingUser.passwordHash)) {
+        throw new InvitationError("Credenciais inválidas para a conta existente.", 403);
+      }
+      if (await tx.membership.findUnique({
+        where: { userId_organizationId: { userId: existingUser.id, organizationId: invitation.organizationId } },
+        select: { id: true },
+      })) throw new InvitationError("Este e-mail já possui vínculo com a organização.", 409);
+      userId = existingUser.id;
+    } else {
+      if (!passwordHash) throw new InvitationError("Tente novamente para criar sua conta.", 409);
+      const user = await tx.user.create({ data: { name: invitation.name, email, passwordHash } });
+      userId = user.id;
     }
-    const user = await tx.user.create({ data: { name: invitation.name, email, passwordHash } });
     await tx.membership.create({
-      data: { userId: user.id, organizationId: invitation.organizationId, role: invitation.role },
+      data: { userId, organizationId: invitation.organizationId, role: invitation.role },
     });
     await tx.organizationInvitation.update({ where: { id: invitation.id }, data: { acceptedAt: new Date() } });
     await tx.auditLog.create({
       data: {
-        organizationId: invitation.organizationId, userId: user.id,
+        organizationId: invitation.organizationId, userId,
         action: "ORGANIZATION_INVITATION_ACCEPTED", entity: "OrganizationInvitation", entityId: invitation.id,
         metadata: { invitedById: invitation.invitedById, role: invitation.role },
       },
     });
-    return { userId: user.id, organizationId: invitation.organizationId };
+    return { userId, organizationId: invitation.organizationId };
   });
 }

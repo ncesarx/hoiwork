@@ -1,0 +1,4 @@
+.switcher { display: grid; gap: 4px; max-width: 220px; margin-right: 16px; }
+.switcher label { color: #9aa7af; font-size: 10px; }
+.switcher select { min-width: 140px; max-width: 220px; border: 1px solid var(--line); border-radius: 8px; padding: 8px; color: #f8f9fb; background: #06131d; font: inherit; font-size: 12px; }
+.switcher small { color: #ffaaaa; }

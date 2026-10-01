@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { auth } from "@/auth";
-import { getActiveMembership } from "@/lib/organization/access";
+import { getSelectedMembership } from "@/lib/organization/access";
+import { ORGANIZATION_CONTEXT_COOKIE } from "@/lib/organization/context-cookie";
 import { LoginForm } from "@/components/auth/login-form";
 import "./login.css";
 
@@ -11,8 +13,10 @@ export const metadata = {
 
 export default async function PortalLoginPage() {
   const session = await auth();
-  if (session?.user?.id && session.user.organizationId) {
-    const membership = await getActiveMembership(session.user.id, session.user.organizationId);
+  if (session?.user?.id) {
+    const rawPreference = (await cookies()).get(ORGANIZATION_CONTEXT_COOKIE)?.value ?? null;
+    const preference = rawPreference && rawPreference.length <= 128 ? rawPreference : null;
+    const membership = await getSelectedMembership(session.user.id, preference, session.user.organizationId);
     if (membership && session.user.sessionVersion === membership.user.sessionVersion) redirect("/portal");
   }
 

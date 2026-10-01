@@ -8,6 +8,7 @@ const actions = [
   "ORGANIZATION_INVITATION_ACCEPTED",
   "ORGANIZATION_INVITATION_REVOKED",
   "USER_PASSWORD_CHANGED",
+  "ORGANIZATION_CONTEXT_CHANGED",
 ];
 
 const labels: Record<string, string> = {
@@ -18,6 +19,7 @@ const labels: Record<string, string> = {
   ORGANIZATION_INVITATION_ACCEPTED: "Convite aceito",
   ORGANIZATION_INVITATION_REVOKED: "Convite revogado",
   USER_PASSWORD_CHANGED: "Senha alterada",
+  ORGANIZATION_CONTEXT_CHANGED: "Organização selecionada",
 };
 
 const roles = new Set(["CLIENT", "MANAGER", "TECHNICIAN", "ADMIN"]);

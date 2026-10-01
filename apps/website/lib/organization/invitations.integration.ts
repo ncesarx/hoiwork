@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
 import { test } from "node:test";
-import { compare } from "bcryptjs";
+import { compare, hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { requireDisposableDatabase } from "@/lib/test-support/disposable-db";
+import { getActiveOrganizationsForUser, getSelectedMembership } from "./access";
 import { acceptInvitation, createInvitation, InvitationError, listOrganizationInvitations, revokeInvitation } from "./invitations";
 
 test("organization invite is scoped, hashed, single use, and provisions credentials with audit", async () => {
@@ -147,5 +148,52 @@ test("activation and revocation of one invite have exactly one winner", async ()
     await prisma.auditLog.deleteMany({ where: { organizationId: organization.id } });
     await prisma.organization.delete({ where: { id: organization.id } });
     await prisma.user.deleteMany({ where: { email: { in: [admin.email, email] } } });
+  }
+});
+
+test("existing account accepts a second organization with current password and switches context safely", async () => {
+  requireDisposableDatabase();
+  const suffix = randomUUID();
+  const [first, second] = await Promise.all([
+    prisma.organization.create({ data: { name: "Primeira", slug: `first-${suffix}` } }),
+    prisma.organization.create({ data: { name: "Segunda", slug: `second-${suffix}` } }),
+  ]);
+  const passwordHash = await hash("existing-password", 12);
+  const [admin, person] = await Promise.all([
+    prisma.user.create({ data: { email: `admin-${suffix}@example.test` } }),
+    prisma.user.create({ data: { email: `person-${suffix}@example.test`, name: "Nome anterior", passwordHash } }),
+  ]);
+  try {
+    await Promise.all([
+      prisma.membership.create({ data: { userId: admin.id, organizationId: second.id, role: "ADMIN" } }),
+      prisma.membership.create({ data: { userId: person.id, organizationId: first.id, role: "CLIENT" } }),
+    ]);
+    const create = (email = person.email) => createInvitation({
+      organizationId: second.id, actorUserId: admin.id, email, name: "Nome do convite", role: "TECHNICIAN",
+    });
+    await assert.rejects(create(admin.email), (error) => error instanceof InvitationError && error.status === 409);
+    const { token } = await create();
+    await assert.rejects(acceptInvitation({ token, email: person.email, password: "wrong-password" }),
+      (error) => error instanceof InvitationError && error.status === 403);
+    const result = await acceptInvitation({ token, email: person.email, password: "existing-password" });
+    assert.equal(result.userId, person.id);
+    assert.equal(await prisma.user.count({ where: { email: person.email } }), 1);
+    const saved = await prisma.user.findUniqueOrThrow({ where: { id: person.id } });
+    assert.equal(saved.name, "Nome anterior");
+    assert.equal(saved.passwordHash, passwordHash);
+    assert.equal((await getSelectedMembership(person.id, second.id, first.id))?.role, "TECHNICIAN");
+    assert.equal((await getActiveOrganizationsForUser(person.id)).length, 2);
+    const secondMembership = await prisma.membership.findUniqueOrThrow({
+      where: { userId_organizationId: { userId: person.id, organizationId: second.id } },
+    });
+    await prisma.membership.update({ where: { id: secondMembership.id }, data: { active: false } });
+    assert.equal((await getSelectedMembership(person.id, second.id, first.id))?.organizationId, first.id);
+    assert.equal((await getActiveOrganizationsForUser(person.id)).length, 1);
+    assert.equal(await getSelectedMembership(person.id, second.id, null), null);
+    await assert.rejects(create(), (error) => error instanceof InvitationError && error.status === 409);
+  } finally {
+    await prisma.auditLog.deleteMany({ where: { organizationId: { in: [first.id, second.id] } } });
+    await Promise.all([prisma.organization.delete({ where: { id: first.id } }), prisma.organization.delete({ where: { id: second.id } })]);
+    await prisma.user.deleteMany({ where: { id: { in: [admin.id, person.id] } } });
   }
 });

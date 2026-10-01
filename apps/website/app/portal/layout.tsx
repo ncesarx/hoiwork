@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { requireOrganization } from "@/lib/authz";
+import { getActiveOrganizationsForUser } from "@/lib/organization/access";
 import "./portal.css";
 import "./enterprise.css";
 import "./data-layer.css";
@@ -54,11 +55,14 @@ import "./cockpit/control-plane-reliability.css";
 
 export default async function PortalLayout({ children }: { children: ReactNode }) {
   const { organization, session, membership } = await requireOrganization();
+  const organizations = await getActiveOrganizationsForUser(session.user.id);
   return (
     <PortalShell
       organizationName={organization.name}
       userName={session.user.name?.trim() || session.user.email?.trim() || "Usuário"}
       isAdmin={membership.role === "ADMIN"}
+      organizationId={organization.id}
+      organizations={organizations}
     >
       {children}
     </PortalShell>
