@@ -18,6 +18,7 @@ export async function getOrganizationMembers(organizationId: string) {
     where: { organizationId },
     select: {
       id: true,
+      userId: true,
       role: true,
       createdAt: true,
       user: {

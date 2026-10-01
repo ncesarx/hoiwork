@@ -21,7 +21,7 @@ export const manualSections = [
     steps: [
       "Reúna nome do cliente, responsáveis, contatos, sites, escopo contratado e ambientes que serão acompanhados.",
       "Solicite ao administrador o provisionamento da organização e dos usuários, com os vínculos e permissões necessários. O portal atual não oferece uma tela administrativa completa de cadastro de novos clientes.",
-      "O administrador pode consultar usuários vinculados, papéis e estado de acesso em Organização e acessos; essa tela é de consulta.",
+      "O administrador pode consultar usuários vinculados e alterar seus papéis em Organização e acessos. A alteração do próprio papel é bloqueada e cada mudança é auditada.",
       "Valide o primeiro login com o usuário do cliente e confirme com o administrador que ele está vinculado à organização correta.",
       "Cadastre as instâncias Proxmox do cliente no Integration Registry, teste cada conexão e execute o Discovery da instância desejada.",
       "Confira recursos descobertos, inventário, contratos e planos de Backup/DR. Combine responsáveis por chamados, incidentes e revisão diária do Cockpit.",

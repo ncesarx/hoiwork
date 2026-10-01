@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireOrganization } from "@/lib/authz";
 import { getOrganizationMembers } from "@/lib/organization/access";
+import { MemberRoleEditor } from "./member-role-editor";
 import styles from "./page.module.css";
 
 export const metadata = {
@@ -9,7 +10,7 @@ export const metadata = {
 };
 
 export default async function OrganizationAccessPage() {
-  const { organization, membership } = await requireOrganization();
+  const { organization, membership, session } = await requireOrganization();
   if (membership.role !== "ADMIN") notFound();
 
   const members = await getOrganizationMembers(organization.id);
@@ -19,7 +20,7 @@ export default async function OrganizationAccessPage() {
       <header className="portal-heading">
         <span>Administração da organização</span>
         <h1>Organização e acessos</h1>
-        <p>Confira os usuários vinculados à organização e seus papéis antes de provisionar novos acessos.</p>
+        <p>Confira os usuários vinculados e gerencie os papéis de acesso da organização.</p>
       </header>
 
       <div className={styles.summary}>
@@ -32,13 +33,13 @@ export default async function OrganizationAccessPage() {
         <div className={styles.heading}>
           <div>
             <h2 id="members-title">Usuários e permissões</h2>
-            <p>Dados da organização ativa. Usuários inativos não podem acessar o portal.</p>
+            <p>Usuários inativos não podem acessar o portal. Alterações de papel são registradas em auditoria.</p>
           </div>
-          <span>Consulta</span>
+          <span>ADMIN</span>
         </div>
         <div className={styles.tableWrap}>
           <table>
-            <thead><tr><th>Usuário</th><th>E-mail</th><th>Papel</th><th>Estado</th><th>Vinculado em</th></tr></thead>
+            <thead><tr><th>Usuário</th><th>E-mail</th><th>Papel</th><th>Estado</th><th>Vinculado em</th><th>Ajustar papel</th></tr></thead>
             <tbody>
               {members.map((member) => (
                 <tr key={member.id}>
@@ -47,6 +48,7 @@ export default async function OrganizationAccessPage() {
                   <td>{member.role}</td>
                   <td>{member.user.active ? "Ativo" : "Inativo"}</td>
                   <td>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" }).format(member.createdAt)}</td>
+                  <td><MemberRoleEditor membershipId={member.id} currentRole={member.role} self={member.userId === session.user.id} /></td>
                 </tr>
               ))}
             </tbody>
