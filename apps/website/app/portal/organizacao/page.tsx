@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireOrganization } from "@/lib/authz";
 import { getOrganizationMembers } from "@/lib/organization/access";
+import { listAccessAudit } from "@/lib/organization/access-audit";
 import { listOrganizationInvitations } from "@/lib/organization/invitations";
 import { MemberRoleEditor } from "./member-role-editor";
 import { MemberAccessButton } from "./member-access-button";
@@ -17,9 +18,10 @@ export default async function OrganizationAccessPage() {
   const { organization, membership, session } = await requireOrganization();
   if (membership.role !== "ADMIN") notFound();
 
-  const [members, invitations] = await Promise.all([
+  const [members, invitations, audit] = await Promise.all([
     getOrganizationMembers(organization.id),
     listOrganizationInvitations(organization.id),
+    listAccessAudit(organization.id),
   ]);
   const formatDate = (date: Date) => new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo",
@@ -97,6 +99,25 @@ export default async function OrganizationAccessPage() {
           </table>
         </div>
         {members.length === 0 ? <p>Nenhum vínculo encontrado para esta organização.</p> : null}
+      </section>
+
+      <section className={styles.panel} aria-labelledby="audit-title">
+        <div className={styles.heading}><div>
+          <h2 id="audit-title">Histórico de acessos</h2>
+          <p>Últimas 50 alterações de convites, papéis e suspensões desta organização.</p>
+        </div></div>
+        <div className={styles.tableWrap}>
+          <table>
+            <thead><tr><th>Quando</th><th>Ação</th><th>Responsável</th><th>Destinatário</th><th>Detalhes</th></tr></thead>
+            <tbody>
+              {audit.map((event) => <tr key={event.id}>
+                <td>{formatDate(event.createdAt)}</td><td>{event.action}</td>
+                <td>{event.actor}</td><td>{event.target}</td><td>{event.details ?? "—"}</td>
+              </tr>)}
+            </tbody>
+          </table>
+        </div>
+        {audit.length === 0 ? <p>Nenhuma alteração de acesso registrada.</p> : null}
       </section>
     </>
   );

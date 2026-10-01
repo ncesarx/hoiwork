@@ -25,6 +25,7 @@ export const manualSections = [
       "Para um novo usuário, o ADMIN cria um convite em Organização e acessos e compartilha o link por um canal seguro. O link vence em 24 horas, só funciona uma vez e permite ao convidado definir sua própria senha. E-mails já cadastrados precisam de um fluxo de vínculo separado.",
       "Em Convites recentes, acompanhe os estados pendente, aceito, expirado e revogado. Revogue um convite pendente se o link tiver sido compartilhado por engano; para gerar outro link após a revogação, crie um novo convite.",
       "O ADMIN pode suspender e reativar o vínculo de outro usuário em Organização e acessos. Uma suspensão impede novos logins nesse vínculo e bloqueia sessões existentes nas rotas da organização. O último ADMIN ativo permanece protegido.",
+      "Consulte Histórico de acessos, na mesma página, para ver as 50 alterações mais recentes em convites, papéis e suspensões, com responsável e destinatário.",
       "Valide o primeiro login com o usuário do cliente e confirme com o administrador que ele está vinculado à organização correta.",
       "Cadastre as instâncias Proxmox do cliente no Integration Registry, teste cada conexão e execute o Discovery da instância desejada.",
       "Confira recursos descobertos, inventário, contratos e planos de Backup/DR. Combine responsáveis por chamados, incidentes e revisão diária do Cockpit.",
