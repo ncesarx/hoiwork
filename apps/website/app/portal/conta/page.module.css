@@ -8,3 +8,8 @@
 .form button { min-height: 44px; border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; background: var(--gold2, #f1c45b); font-weight: 800; }
 .form button:disabled { opacity: .5; cursor: not-allowed; }
 .form p { color: #ffaaaa; }
+.tableWrap { overflow-x: auto; margin-top: 16px; }
+.tableWrap table { width: 100%; min-width: 460px; border-collapse: collapse; text-align: left; }
+.tableWrap th, .tableWrap td { padding: 10px 8px; border-bottom: 1px solid var(--line); }
+.tableWrap th { color: #a9bac5; font-size: 12px; }
+.tableWrap td { overflow-wrap: anywhere; font-size: 13px; }

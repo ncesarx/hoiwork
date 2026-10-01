@@ -31,6 +31,7 @@ export const manualSections = [
       "Consulte Histórico de acessos, na mesma página, para ver as 50 ocorrências mais recentes: entradas e saídas pelo portal, troca de organização, convites, papéis e suspensões. O responsável aparece com nome e e-mail.",
       "Cada usuário pode alterar a própria senha em Minha conta. A troca exige a senha atual e encerra o acesso das sessões anteriores; entre novamente com a nova senha.",
       "Em Minha conta, Encerrar todas as sessões invalida o acesso em todos os dispositivos e organizações após confirmar a senha atual. A senha permanece igual; entre novamente para continuar.",
+      "Em Minha conta, consulte Atividade recente da conta para rever suas últimas 20 entradas, saídas, trocas de organização e alterações de segurança em todos os seus vínculos.",
       "O ADMIN pode exportar Histórico de acessos em CSV por período UTC. Sem datas, o relatório usa os últimos 90 dias; o limite é de 1000 eventos por arquivo.",
       "Valide o primeiro login com o usuário do cliente e confirme com o administrador que ele está vinculado à organização correta.",
       "Cadastre as instâncias Proxmox do cliente no Integration Registry, teste cada conexão e execute o Discovery da instância desejada.",

@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test } from "node:test";
 import { prisma } from "@/lib/prisma";
 import { requireDisposableDatabase } from "@/lib/test-support/disposable-db";
-import { listAccessAudit } from "./access-audit";
+import { listAccessAudit, listOwnSecurityActivity } from "./access-audit";
 
 test("access history is tenant-scoped and never returns raw metadata or invitation tokens", async () => {
   requireDisposableDatabase();
@@ -93,5 +93,44 @@ test("access history is tenant-scoped and never returns raw metadata or invitati
     await prisma.auditLog.deleteMany({ where: { organizationId: { in: [organization.id, other.id] } } });
     await Promise.all([prisma.organization.delete({ where: { id: organization.id } }), prisma.organization.delete({ where: { id: other.id } })]);
     await prisma.user.deleteMany({ where: { id: { in: [actor.id, target.id] } } });
+  }
+});
+
+test("own security history is bounded across organizations and never includes another person's activity", async () => {
+  requireDisposableDatabase();
+  const suffix = randomUUID();
+  const [first, second] = await Promise.all([
+    prisma.organization.create({ data: { name: "My first", slug: `own-first-${suffix}` } }),
+    prisma.organization.create({ data: { name: "My second", slug: `own-second-${suffix}` } }),
+  ]);
+  const [user, other] = await Promise.all([
+    prisma.user.create({ data: { email: `mine-${suffix}@example.test` } }),
+    prisma.user.create({ data: { email: `other-${suffix}@example.test` } }),
+  ]);
+  try {
+    await prisma.auditLog.createMany({ data: Array.from({ length: 21 }, (_, index) => ({
+      organizationId: index % 2 ? first.id : second.id,
+      userId: user.id, action: index % 2 ? "ACCOUNT_SIGNED_IN" : "USER_SESSIONS_REVOKED",
+      entity: "User", entityId: user.id, metadata: { secret: "never-show" },
+      createdAt: new Date(Date.UTC(2026, 9, 1, 12, index)),
+    })) });
+    await prisma.auditLog.createMany({ data: [
+      { organizationId: first.id, userId: other.id, action: "ACCOUNT_SIGNED_IN", entity: "User", entityId: other.id },
+      { organizationId: first.id, userId: user.id, action: "ACCOUNT_SIGNED_IN", entity: "User", entityId: other.id },
+      { organizationId: first.id, userId: user.id, action: "UNRELATED_SYSTEM_EVENT", entity: "User", entityId: user.id },
+    ] });
+    const activity = await listOwnSecurityActivity(user.id);
+    assert.equal(activity.length, 20);
+    assert.equal(activity[0].action, "Sessões encerradas");
+    assert.equal(activity[0].organizationName, "My second");
+    assert.equal(activity[1].organizationName, "My first");
+    assert.ok(activity[0].createdAt > activity[19].createdAt);
+    assert.equal(JSON.stringify(activity).includes("never-show"), false);
+    assert.equal(JSON.stringify(activity).includes(other.id), false);
+    assert.equal((await listOwnSecurityActivity(other.id)).length, 1);
+  } finally {
+    await prisma.auditLog.deleteMany({ where: { organizationId: { in: [first.id, second.id] } } });
+    await Promise.all([prisma.organization.delete({ where: { id: first.id } }), prisma.organization.delete({ where: { id: second.id } })]);
+    await prisma.user.deleteMany({ where: { id: { in: [user.id, other.id] } } });
   }
 });

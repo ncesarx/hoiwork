@@ -30,6 +30,29 @@ const labels: Record<string, string> = {
 
 const roles = new Set(["CLIENT", "MANAGER", "TECHNICIAN", "ADMIN"]);
 
+const ownSecurityActions = [
+  "ACCOUNT_SIGNED_IN",
+  "ACCOUNT_SIGNED_OUT",
+  "ORGANIZATION_CONTEXT_CHANGED",
+  "USER_PASSWORD_CHANGED",
+  "USER_SESSIONS_REVOKED",
+];
+
+export async function listOwnSecurityActivity(userId: string) {
+  const events = await prisma.auditLog.findMany({
+    where: { userId, entity: "User", entityId: userId, action: { in: ownSecurityActions } },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 20,
+    select: { id: true, createdAt: true, action: true, organization: { select: { name: true } } },
+  });
+  return events.map((event) => ({
+    id: event.id,
+    createdAt: event.createdAt,
+    action: labels[event.action],
+    organizationName: event.organization?.name ?? "Organização indisponível",
+  }));
+}
+
 export async function listAccessAudit(organizationId: string, options: {
   from?: Date; toExclusive?: Date; limit?: number;
 } = {}) {
