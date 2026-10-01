@@ -84,6 +84,7 @@ export async function AutonomousGovernancePanel() {
         <article><span>Intervalo</span><strong>{config?.intervalMinutes ?? 5} min</strong></article>
         <article><span>Último sucesso</span><strong>{utc(config?.lastSuccessAt ?? null)}</strong></article>
         <article><span>Último scheduler</span><strong>{utc(automation.lastSchedulerRunAt)}</strong></article>
+        {config?.enabled ? <article><span>Próxima tentativa</span><strong>{automation.nextRunAt ? utc(automation.nextRunAt) : "Agora"}</strong></article> : null}
       </div>
 
       {config?.lastError ? (

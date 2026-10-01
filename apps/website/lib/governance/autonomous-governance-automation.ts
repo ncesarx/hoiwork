@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { Client } from "pg";
 import { prisma } from "@/lib/prisma";
 import { reconcileAutonomousGovernanceState } from "@/lib/governance/autonomous-recovery-audit";
+import { autonomousGovernanceRunDue } from "@/lib/governance/autonomous-governance-timing";
 
 export type AutonomousGovernanceAutomationSource =
   | "MANUAL"
@@ -78,10 +79,7 @@ export async function runAutonomousGovernanceAutomation(input: {
     };
   }
 
-  const due =
-    !config.lastRunAt ||
-    Date.now() - config.lastRunAt.getTime() >=
-      config.intervalMinutes * 60_000;
+  const due = autonomousGovernanceRunDue(config, new Date());
 
   if (input.respectEnabled && !due) {
     return {
@@ -108,9 +106,7 @@ export async function runAutonomousGovernanceAutomation(input: {
         }
         if (
           input.respectEnabled &&
-          lockedConfig.lastRunAt &&
-          Date.now() - lockedConfig.lastRunAt.getTime() <
-            lockedConfig.intervalMinutes * 60_000
+          !autonomousGovernanceRunDue(lockedConfig, new Date())
         ) {
           return {
             skipped: true as const,

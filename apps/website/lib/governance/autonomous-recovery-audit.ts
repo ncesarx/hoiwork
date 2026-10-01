@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { nextAutonomousGovernanceRunAt } from "@/lib/governance/autonomous-governance-timing";
 import {
   evaluateCapabilityGovernanceMatrix,
   type GovernedCapability,
@@ -320,6 +321,9 @@ export async function getAutonomousGovernanceStatus(
       health: automationHealth,
       overdue,
       lastSchedulerRunAt: lastSchedulerRun?.startedAt ?? null,
+      nextRunAt: automationConfig?.enabled
+        ? nextAutonomousGovernanceRunAt(automationConfig)
+        : null,
       currentMode: automationConfig?.commitEnabled
         ? "COMMIT"
         : "DRY_RUN",
