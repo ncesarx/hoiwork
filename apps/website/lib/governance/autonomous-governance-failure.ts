@@ -4,6 +4,7 @@ export type GovernanceFailureCode =
   | "DATABASE_ERROR"
   | "DEPENDENCY_UNAVAILABLE"
   | "DEPENDENCY_TIMEOUT"
+  | "INTERRUPTED"
   | "EVALUATION_FAILED";
 
 const messages: Record<GovernanceFailureCode, string> = {
@@ -12,6 +13,7 @@ const messages: Record<GovernanceFailureCode, string> = {
   DATABASE_ERROR: "Falha ao acessar o banco de dados.",
   DEPENDENCY_UNAVAILABLE: "Dependência indisponível durante a avaliação.",
   DEPENDENCY_TIMEOUT: "Tempo limite ao consultar uma dependência.",
+  INTERRUPTED: "Execução interrompida; o scheduler retomará a avaliação.",
   EVALUATION_FAILED: "Falha na avaliação da governança.",
 };
 

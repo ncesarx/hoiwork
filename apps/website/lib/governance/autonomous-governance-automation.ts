@@ -53,6 +53,32 @@ async function withOrganizationLock<T>(
   }
 }
 
+/** Only call while holding this organization's advisory lock. */
+export async function recoverInterruptedAutonomousGovernanceRuns(organizationId: string) {
+  const finishedAt = new Date();
+  return prisma.$transaction(async (tx) => {
+    const recovered = await tx.autonomousGovernanceAutomationRun.updateMany({
+      where: { organizationId, status: "RUNNING" },
+      data: {
+        status: "FAILED", finishedAt, errorMessage: "INTERRUPTED",
+        metadata: { failureCode: "INTERRUPTED" },
+      },
+    });
+    if (recovered.count) {
+      await tx.autonomousGovernanceAutomationConfig.update({
+        where: { organizationId },
+        data: {
+          lastRunAt: finishedAt,
+          lastFailureAt: finishedAt,
+          lastError: "INTERRUPTED",
+          consecutiveFailures: { increment: 1 },
+        },
+      });
+    }
+    return recovered.count;
+  });
+}
+
 export async function runAutonomousGovernanceAutomation(input: {
   organizationId: string;
   source: AutonomousGovernanceAutomationSource;
@@ -95,23 +121,30 @@ export async function runAutonomousGovernanceAutomation(input: {
     const locked = await withOrganizationLock(
       input.organizationId,
       async () => {
-        const lockedConfig =
+        const currentConfig =
           await prisma.autonomousGovernanceAutomationConfig.findUniqueOrThrow({
             where: { organizationId: input.organizationId },
           });
-        if (input.respectEnabled && !lockedConfig.enabled) {
+        if (input.respectEnabled && !currentConfig.enabled) {
           return {
             skipped: true as const,
             reason: "AUTONOMOUS_GOVERNANCE_AUTOMATION_DISABLED",
           };
         }
+        const recoveredRuns = await recoverInterruptedAutonomousGovernanceRuns(input.organizationId);
+        const lockedConfig = recoveredRuns
+          ? await prisma.autonomousGovernanceAutomationConfig.findUniqueOrThrow({
+              where: { organizationId: input.organizationId },
+            })
+          : currentConfig;
         if (
           input.respectEnabled &&
           !autonomousGovernanceRunDue(lockedConfig, new Date())
         ) {
           return {
             skipped: true as const,
-            reason: "INTERVAL_NOT_DUE",
+            reason: recoveredRuns ? "INTERRUPTED_RUN_RECOVERED" : "INTERVAL_NOT_DUE",
+            ...(recoveredRuns ? { recoveredRuns } : {}),
           };
         }
 

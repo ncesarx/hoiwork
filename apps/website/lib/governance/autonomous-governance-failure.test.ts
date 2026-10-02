@@ -13,5 +13,6 @@ test("failure classification never exposes exception messages, credentials or ar
   assert.equal(publicGovernanceFailure("P1001"), "Falha anterior da automação; consulte os logs do HOIWORK.");
   assert.equal(publicGovernanceFailure(credential), "Falha anterior da automação; consulte os logs do HOIWORK.");
   assert.equal(publicGovernanceFailure("DATABASE_UNAVAILABLE"), "Banco de dados indisponível.");
+  assert.equal(publicGovernanceFailure("INTERRUPTED"), "Execução interrompida; o scheduler retomará a avaliação.");
   assert.equal(publicGovernanceFailure(null), null);
 });
