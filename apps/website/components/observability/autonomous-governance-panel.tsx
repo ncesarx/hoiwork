@@ -83,11 +83,13 @@ export async function AutonomousGovernancePanel() {
         <article><span>Scheduler</span><strong>{config?.enabled ? "Ativo" : "Inativo"}</strong></article>
         <article><span>Intervalo</span><strong>{config?.intervalMinutes ?? 5} min</strong></article>
         <article><span>Último sucesso</span><strong>{utc(config?.lastSuccessAt ?? null)}</strong></article>
-        <article><span>Último scheduler</span><strong>{utc(automation.lastSchedulerRunAt)}</strong></article>
+        <article><span>Último scheduler</span><strong>{utc(automation.lastSchedulerRunAt)}</strong><small>{automation.lastSchedulerRun?.status ?? "Sem execução registrada"}</small></article>
         {config?.enabled ? <article><span>Próxima tentativa</span><strong>{automation.nextRunAt ? utc(automation.nextRunAt) : "Agora"}</strong></article> : null}
       </div>
 
-      {config?.lastError ? (
+      {automation.lastSchedulerRun?.status === "FAILED" ? (
+        <p className="autonomous-governance-error" role="alert">Última execução agendada falhou: {automation.lastSchedulerRun.errorMessage ?? "Falha na avaliação da governança."} Uma avaliação manual bem-sucedida não confirma a recuperação do scheduler.</p>
+      ) : config?.lastError ? (
         <p className="autonomous-governance-error" role="alert">Última falha: {config.lastError}</p>
       ) : null}
 

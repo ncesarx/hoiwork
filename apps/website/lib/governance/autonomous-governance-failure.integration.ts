@@ -40,6 +40,52 @@ test("governance status hides legacy exception text from config and run history"
   }
 });
 
+test("manual success cannot hide a scheduler failure, even beyond recent history", async () => {
+  requireDisposableDatabase();
+  const organization = await prisma.organization.create({ data: {
+    name: "Scheduler health", slug: `scheduler-health-${randomUUID()}`,
+  } });
+  const now = Date.now();
+  const secret = "postgresql://private-user:private-password@localhost:5432/hoiwork";
+  try {
+    await prisma.autonomousGovernanceAutomationConfig.create({ data: {
+      organizationId: organization.id, enabled: true, commitEnabled: false,
+      lastSuccessAt: new Date(now), lastError: null, consecutiveFailures: 0,
+    } });
+    const failed = await prisma.autonomousGovernanceAutomationRun.create({ data: {
+      organizationId: organization.id, source: "SCHEDULER", mode: "DRY_RUN",
+      status: "FAILED", startedAt: new Date(now - 60_000), finishedAt: new Date(now - 59_000),
+      errorMessage: secret,
+    } });
+    await prisma.autonomousGovernanceAutomationRun.createMany({ data: Array.from({ length: 21 }, (_, index) => ({
+      organizationId: organization.id, source: "MANUAL", mode: "DRY_RUN", status: "COMPLETED",
+      startedAt: new Date(now - 30_000 + index * 100), finishedAt: new Date(now - 29_000 + index * 100),
+    })) });
+    const degraded = await getAutonomousGovernanceStatus(organization.id);
+    assert.equal(degraded.automation.lastRun?.status, "COMPLETED");
+    assert.equal(degraded.automation.runs.some((run) => run.id === failed.id), false);
+    assert.equal(degraded.automation.health, "DEGRADED");
+    assert.equal(degraded.automation.lastSchedulerRun?.id, failed.id);
+    assert.equal(degraded.automation.lastSchedulerRun?.status, "FAILED");
+    assert.equal(degraded.automation.lastSchedulerRun?.errorMessage, "Falha anterior da automação; consulte os logs do HOIWORK.");
+    assert.equal(JSON.stringify(degraded).includes(secret), false);
+    assert.equal(degraded.automation.config?.commitEnabled, false);
+
+    const completed = await prisma.autonomousGovernanceAutomationRun.create({ data: {
+      organizationId: organization.id, source: "SCHEDULER", mode: "DRY_RUN",
+      status: "COMPLETED", startedAt: new Date(now), finishedAt: new Date(now),
+    } });
+    const recovered = await getAutonomousGovernanceStatus(organization.id);
+    assert.equal(recovered.automation.health, "HEALTHY");
+    assert.equal(recovered.automation.lastSchedulerRun?.id, completed.id);
+    assert.equal(recovered.automation.lastSchedulerRun?.errorMessage, null);
+  } finally {
+    await prisma.autonomousGovernanceAutomationRun.deleteMany({ where: { organizationId: organization.id } });
+    await prisma.autonomousGovernanceAutomationConfig.deleteMany({ where: { organizationId: organization.id } });
+    await prisma.organization.delete({ where: { id: organization.id } });
+  }
+});
+
 test("interrupted governance runs are recovered once within their organization", async () => {
   requireDisposableDatabase();
   const suffix = randomUUID();

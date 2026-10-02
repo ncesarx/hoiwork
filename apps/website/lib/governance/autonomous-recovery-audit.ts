@@ -277,7 +277,7 @@ export async function getAutonomousGovernanceStatus(
       prisma.autonomousGovernanceAutomationRun.findFirst({
         where: { organizationId, source: "SCHEDULER" },
         orderBy: { startedAt: "desc" },
-        select: { startedAt: true },
+        select: { id: true, status: true, startedAt: true, finishedAt: true, errorMessage: true },
       }),
       prisma.autonomousGovernanceAutomationConfigChange.findFirst({
         where: { organizationId },
@@ -291,6 +291,10 @@ export async function getAutonomousGovernanceStatus(
     errorMessage: publicGovernanceFailure(run.errorMessage),
   }));
   const lastRun = safeRuns[0] ?? null;
+  const safeSchedulerRun = lastSchedulerRun ? {
+    ...lastSchedulerRun,
+    errorMessage: publicGovernanceFailure(lastSchedulerRun.errorMessage),
+  } : null;
 
   const enabledSince = latestConfigChange?.createdAt ?? automationConfig?.createdAt;
   const lastActivityAt = lastSchedulerRun?.startedAt && enabledSince &&
@@ -310,7 +314,8 @@ export async function getAutonomousGovernanceStatus(
       : !automationConfig.enabled
         ? "DISABLED"
         : automationConfig.consecutiveFailures > 0 ||
-            lastRun?.status === "FAILED"
+            lastRun?.status === "FAILED" ||
+            safeSchedulerRun?.status === "FAILED"
           ? "DEGRADED"
           : overdue
             ? "OVERDUE"
@@ -326,6 +331,7 @@ export async function getAutonomousGovernanceStatus(
       health: automationHealth,
       overdue,
       lastSchedulerRunAt: lastSchedulerRun?.startedAt ?? null,
+      lastSchedulerRun: safeSchedulerRun,
       nextRunAt: automationConfig?.enabled
         ? nextAutonomousGovernanceRunAt(automationConfig)
         : null,
