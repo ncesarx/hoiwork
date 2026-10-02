@@ -24,7 +24,7 @@ export default async function PortalPage(){
   const d = await getDashboardData();
   const recentEndpoints = d.proxmoxEndpoints.filter((endpoint) => endpoint.status === "HEALTHY" && !endpoint.lastAttemptFailed && endpoint.freshness === "RECENT").length;
   return <>
-    <section className="portal-heading"><span>Enterprise Data Layer</span><h1>{d.organization.name}</h1><p>Indicadores consultados no PostgreSQL e isolados por organização.</p></section>
+    <section className="portal-heading"><span>Painel da empresa</span><h1>{d.organization.name}</h1><p>Acompanhe a infraestrutura, os chamados e os serviços da sua empresa em um único lugar.</p></section>
     <section className="data-stats">
       <article><strong>{d.assetCount}</strong><span>Recursos no inventário</span></article>
       <article><strong>{d.nodeCount}</strong><span>Nós Proxmox</span></article>

@@ -71,7 +71,7 @@ export function PortalShell({
 
       <div className="portal-content">
         <header className="portal-topbar">
-          <div><small>Portal do Cliente</small><strong>Ambiente Corporativo</strong></div>
+          <div><small>Portal do Cliente</small><strong>{organizationName}</strong></div>
           <div className="portal-user">
             <OrganizationSwitcher currentId={organizationId} options={organizations} />
             <span>HO</span><div><strong>{userName}</strong><small>{organizationName}</small></div>

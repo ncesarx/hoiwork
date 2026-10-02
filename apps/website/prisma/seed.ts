@@ -48,7 +48,6 @@ async function main() {
       slug: "cliente-demonstracao",
     },
     update: {
-      name: "Cliente Demonstração",
       active: true,
     },
     create: {

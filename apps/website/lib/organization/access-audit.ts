@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 const actions = [
+  "ORGANIZATION_PROFILE_UPDATED",
   "MEMBERSHIP_ROLE_CHANGED",
   "MEMBERSHIP_ACCESS_SUSPENDED",
   "MEMBERSHIP_ACCESS_RESTORED",
@@ -16,6 +17,7 @@ const actions = [
 ];
 
 const labels: Record<string, string> = {
+  ORGANIZATION_PROFILE_UPDATED: "Nome da empresa alterado",
   MEMBERSHIP_ROLE_CHANGED: "Papel alterado",
   MEMBERSHIP_ACCESS_SUSPENDED: "Acesso suspenso",
   MEMBERSHIP_ACCESS_RESTORED: "Acesso reativado",
@@ -111,6 +113,10 @@ export async function listAccessAudit(organizationId: string, options: {
       : log.action === "ORGANIZATION_INVITATION_CREATED" && "replacedInvitationId" in metadata && typeof metadata.replacedInvitationId === "string"
         ? "Novo link após correção"
         : null;
+    const companyChange = log.action === "ORGANIZATION_PROFILE_UPDATED" &&
+      "previousName" in metadata && "newName" in metadata &&
+      typeof metadata.previousName === "string" && typeof metadata.newName === "string"
+      ? `${metadata.previousName} → ${metadata.newName}` : null;
     const actorName = log.user?.name?.trim();
     return {
       id: log.id,
@@ -118,10 +124,12 @@ export async function listAccessAudit(organizationId: string, options: {
       action: labels[log.action] ?? "Alteração de acesso",
       actor: log.action === "ACCOUNT_LOGIN_THROTTLED" ? "Acesso não autenticado"
         : actorName && log.user?.email ? `${actorName} <${log.user.email}>` : log.user?.email || "Usuário removido",
-      target: log.entity === "User" && log.entityId === log.user?.id
+      target: log.entity === "Organization" && log.entityId === organizationId
+        ? "Empresa desta organização"
+        : log.entity === "User" && log.entityId === log.user?.id
         ? log.user.email
         : log.entityId ? targets.get(log.entityId) ?? "Registro removido" : "Registro removido",
-      details: roleChange ?? replacement,
+      details: companyChange ?? roleChange ?? replacement,
     };
   });
 }

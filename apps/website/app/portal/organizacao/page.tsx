@@ -6,6 +6,7 @@ import { listOrganizationInvitations } from "@/lib/organization/invitations";
 import { MemberRoleEditor } from "./member-role-editor";
 import { MemberAccessButton } from "./member-access-button";
 import { InvitationForm } from "./invitation-form";
+import { OrganizationProfileForm } from "./organization-profile-form";
 import { RevokeInvitationButton } from "./revoke-invitation-button";
 import { ReplaceInvitationForm } from "./replace-invitation-form";
 import { AccessAuditExportForm } from "./access-audit-export-form";
@@ -42,6 +43,14 @@ export default async function OrganizationAccessPage() {
         <article><span>Identificador</span><strong>{organization.slug}</strong></article>
         <article><span>Usuários vinculados</span><strong>{members.length}</strong></article>
       </div>
+
+      <section className={styles.panel} aria-labelledby="company-title">
+        <div className={styles.heading}><div>
+          <h2 id="company-title">Empresa no portal</h2>
+          <p>O nome aparece no painel e no cabeçalho para todos os usuários desta organização. Empresas diferentes devem usar organizações separadas.</p>
+        </div></div>
+        <OrganizationProfileForm name={organization.name} />
+      </section>
 
       <section className={styles.panel} aria-labelledby="invite-title">
         <div className={styles.heading}><div>
@@ -117,7 +126,7 @@ export default async function OrganizationAccessPage() {
       <section className={styles.panel} aria-labelledby="audit-title">
         <div className={styles.heading}><div>
           <h2 id="audit-title">Histórico de acessos</h2>
-          <p>Últimas 50 alterações de convites, papéis e suspensões desta organização.</p>
+          <p>Últimas 50 alterações de empresa, convites, papéis e suspensões desta organização.</p>
         </div></div>
         <p>Exporte até 1000 eventos em um período de até 366 dias. Sem datas, o relatório cobre os últimos 90 dias.</p>
         <AccessAuditExportForm />

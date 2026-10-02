@@ -21,6 +21,7 @@ export const manualSections = [
     steps: [
       "Reúna nome do cliente, responsáveis, contatos, sites, escopo contratado e ambientes que serão acompanhados.",
       "Solicite ao administrador o provisionamento da organização e dos usuários, com os vínculos e permissões necessários. O portal atual não oferece uma tela administrativa completa de cadastro de novos clientes.",
+      "O ADMIN pode editar o nome da empresa em Organização e acessos → Empresa no portal. O nome aparece no painel e no cabeçalho para todos os usuários vinculados; a alteração fica no histórico. Empresas diferentes devem usar organizações separadas.",
       "O administrador pode consultar usuários vinculados e alterar seus papéis em Organização e acessos. A alteração do próprio papel é bloqueada e cada mudança é auditada.",
       "O ADMIN cria um convite em Organização e acessos e compartilha o link por um canal seguro. O link vence em 24 horas e só funciona uma vez. Um novo usuário define uma senha; quem já possui conta confirma a senha atual para aceitar um vínculo adicional.",
       "Se você tem acesso a mais de uma organização, use o seletor Organização no cabeçalho para alternar o contexto. Cada troca valida seu vínculo ativo.",
