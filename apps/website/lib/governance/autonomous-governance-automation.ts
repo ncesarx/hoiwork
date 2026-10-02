@@ -21,6 +21,7 @@ type LockedExecution<T> =
 async function withOrganizationLock<T>(
   organizationId: string,
   execute: () => Promise<T>,
+  onExecutionError: (error: unknown) => Promise<void>,
 ): Promise<LockedExecution<T>> {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
@@ -38,7 +39,12 @@ async function withOrganizationLock<T>(
     acquired = Boolean(lock.rows[0]?.acquired);
     if (!acquired) return { acquired: false };
 
-    return { acquired: true, result: await execute() };
+    try {
+      return { acquired: true, result: await execute() };
+    } catch (error) {
+      await onExecutionError(error);
+      throw error;
+    }
   } finally {
     try {
       if (acquired) {
@@ -117,95 +123,124 @@ export async function runAutonomousGovernanceAutomation(input: {
 
   let runId: string | null = null;
 
-  try {
-    const locked = await withOrganizationLock(
-      input.organizationId,
-      async () => {
-        const currentConfig =
-          await prisma.autonomousGovernanceAutomationConfig.findUniqueOrThrow({
+  const recordFailure = async (error: unknown) => {
+    const finishedAt = new Date();
+    const failureCode = classifyGovernanceFailure(error);
+    // Both records remain consistent even if persistence fails. A RUNNING row
+    // left by a database outage will be recovered on the next locked attempt.
+    await prisma.$transaction(async (tx) => {
+      if (runId) {
+        const failedRun = await tx.autonomousGovernanceAutomationRun.findUniqueOrThrow({
+          where: { id: runId }, select: { startedAt: true },
+        });
+        await tx.autonomousGovernanceAutomationRun.update({
+          where: { id: runId },
+          data: {
+            status: "FAILED", finishedAt,
+            durationMs: finishedAt.getTime() - failedRun.startedAt.getTime(),
+            errorMessage: failureCode, metadata: { failureCode },
+          },
+        });
+      }
+      await tx.autonomousGovernanceAutomationConfig.update({
+        where: { organizationId: input.organizationId },
+        data: {
+          lastRunAt: finishedAt, lastFailureAt: finishedAt, lastError: failureCode,
+          consecutiveFailures: { increment: 1 },
+        },
+      });
+    }).catch(() => {});
+  };
+
+  const locked = await withOrganizationLock(
+    input.organizationId,
+    async () => {
+      const currentConfig =
+        await prisma.autonomousGovernanceAutomationConfig.findUniqueOrThrow({
+          where: { organizationId: input.organizationId },
+        });
+      if (input.respectEnabled && !currentConfig.enabled) {
+        return {
+          skipped: true as const,
+          reason: "AUTONOMOUS_GOVERNANCE_AUTOMATION_DISABLED",
+        };
+      }
+      const recoveredRuns = await recoverInterruptedAutonomousGovernanceRuns(input.organizationId);
+      const lockedConfig = recoveredRuns
+        ? await prisma.autonomousGovernanceAutomationConfig.findUniqueOrThrow({
             where: { organizationId: input.organizationId },
-          });
-        if (input.respectEnabled && !currentConfig.enabled) {
-          return {
-            skipped: true as const,
-            reason: "AUTONOMOUS_GOVERNANCE_AUTOMATION_DISABLED",
-          };
-        }
-        const recoveredRuns = await recoverInterruptedAutonomousGovernanceRuns(input.organizationId);
-        const lockedConfig = recoveredRuns
-          ? await prisma.autonomousGovernanceAutomationConfig.findUniqueOrThrow({
-              where: { organizationId: input.organizationId },
-            })
-          : currentConfig;
-        if (
-          input.respectEnabled &&
-          !autonomousGovernanceRunDue(lockedConfig, new Date())
-        ) {
-          return {
-            skipped: true as const,
-            reason: recoveredRuns ? "INTERRUPTED_RUN_RECOVERED" : "INTERVAL_NOT_DUE",
-            ...(recoveredRuns ? { recoveredRuns } : {}),
-          };
-        }
+          })
+        : currentConfig;
+      if (
+        input.respectEnabled &&
+        !autonomousGovernanceRunDue(lockedConfig, new Date())
+      ) {
+        return {
+          skipped: true as const,
+          reason: recoveredRuns ? "INTERRUPTED_RUN_RECOVERED" : "INTERVAL_NOT_DUE",
+          ...(recoveredRuns ? { recoveredRuns } : {}),
+        };
+      }
 
-        const startedAt = new Date();
+      const startedAt = new Date();
 
-        const commit = lockedConfig.commitEnabled && !input.dryRunOnly;
-        const mode = commit
-          ? "COMMIT"
-          : "DRY_RUN";
+      const commit = lockedConfig.commitEnabled && !input.dryRunOnly;
+      const mode = commit
+        ? "COMMIT"
+        : "DRY_RUN";
 
-        const run =
-          await prisma.autonomousGovernanceAutomationRun.create({
-            data: {
-              organizationId: input.organizationId,
-              source: input.source,
-              mode,
-              status: "RUNNING",
-              startedAt,
-            },
-          });
-
-        runId = run.id;
-
-        const reconciliation =
-          await reconcileAutonomousGovernanceState({
+      const run =
+        await prisma.autonomousGovernanceAutomationRun.create({
+          data: {
             organizationId: input.organizationId,
             source: input.source,
-            commit,
-          });
+            mode,
+            status: "RUNNING",
+            startedAt,
+          },
+        });
 
-        const capabilities =
-          reconciliation.actions.length;
+      runId = run.id;
 
-        const changed =
-          reconciliation.actions.filter(
-            (action) => action.changed === true,
-          ).length;
+      const reconciliation =
+        await reconcileAutonomousGovernanceState({
+          organizationId: input.organizationId,
+          source: input.source,
+          commit,
+        });
 
-        const authorized =
-          reconciliation.actions.filter(
-            (action) =>
-              action.effectiveDecision === "AUTHORIZED",
-          ).length;
+      const capabilities =
+        reconciliation.actions.length;
 
-        const restricted =
-          reconciliation.actions.filter(
-            (action) =>
-              action.effectiveDecision === "RESTRICTED",
-          ).length;
+      const changed =
+        reconciliation.actions.filter(
+          (action) => action.changed === true,
+        ).length;
 
-        const blocked =
-          reconciliation.actions.filter(
-            (action) =>
-              action.effectiveDecision === "BLOCKED",
-          ).length;
+      const authorized =
+        reconciliation.actions.filter(
+          (action) =>
+            action.effectiveDecision === "AUTHORIZED",
+        ).length;
 
-        const finishedAt = new Date();
-        const durationMs =
-          finishedAt.getTime() - startedAt.getTime();
+      const restricted =
+        reconciliation.actions.filter(
+          (action) =>
+            action.effectiveDecision === "RESTRICTED",
+        ).length;
 
-        await prisma.autonomousGovernanceAutomationRun.update({
+      const blocked =
+        reconciliation.actions.filter(
+          (action) =>
+            action.effectiveDecision === "BLOCKED",
+        ).length;
+
+      const finishedAt = new Date();
+      const durationMs =
+        finishedAt.getTime() - startedAt.getTime();
+
+      await prisma.$transaction([
+        prisma.autonomousGovernanceAutomationRun.update({
           where: {
             id: run.id,
           },
@@ -234,9 +269,8 @@ export async function runAutonomousGovernanceAutomation(input: {
               })),
             } as Prisma.InputJsonValue,
           },
-        });
-
-        await prisma.autonomousGovernanceAutomationConfig.update({
+        }),
+        prisma.autonomousGovernanceAutomationConfig.update({
           where: {
             organizationId: input.organizationId,
           },
@@ -246,87 +280,34 @@ export async function runAutonomousGovernanceAutomation(input: {
             lastError: null,
             consecutiveFailures: 0,
           },
-        });
+        }),
+      ]);
 
-        return {
-          skipped: false as const,
-          runId: run.id,
-          status: "COMPLETED" as const,
-          mode,
-          capabilities,
-          changed,
-          authorized,
-          restricted,
-          blocked,
-          durationMs,
-          evaluatedAt: reconciliation.evaluatedAt,
-          globalCandidateDecision:
-            reconciliation.globalCandidateDecision,
-        };
-      },
-    );
-
-    if (!locked.acquired) {
       return {
-        skipped: true as const,
-        reason: "CONCURRENT_RUN",
+        skipped: false as const,
+        runId: run.id,
+        status: "COMPLETED" as const,
+        mode,
+        capabilities,
+        changed,
+        authorized,
+        restricted,
+        blocked,
+        durationMs,
+        evaluatedAt: reconciliation.evaluatedAt,
+        globalCandidateDecision:
+          reconciliation.globalCandidateDecision,
       };
-    }
+    },
+    recordFailure,
+  );
 
-    return locked.result;
-  } catch (error) {
-    const finishedAt = new Date();
-
-    const failureCode = classifyGovernanceFailure(error);
-
-    if (runId) {
-      const failedRun =
-        await prisma.autonomousGovernanceAutomationRun
-          .findUnique({
-            where: {
-              id: runId,
-            },
-            select: {
-              startedAt: true,
-            },
-          })
-          .catch(() => null);
-
-      await prisma.autonomousGovernanceAutomationRun
-        .update({
-          where: {
-            id: runId,
-          },
-          data: {
-            status: "FAILED",
-            finishedAt,
-            durationMs: failedRun?.startedAt
-              ? finishedAt.getTime() -
-                failedRun.startedAt.getTime()
-              : null,
-            errorMessage: failureCode,
-            metadata: { failureCode },
-          },
-        })
-        .catch(() => {});
-    }
-
-    await prisma.autonomousGovernanceAutomationConfig
-      .update({
-        where: {
-          organizationId: input.organizationId,
-        },
-        data: {
-          lastRunAt: finishedAt,
-          lastFailureAt: finishedAt,
-          lastError: failureCode,
-          consecutiveFailures: {
-            increment: 1,
-          },
-        },
-      })
-      .catch(() => {});
-
-    throw error;
+  if (!locked.acquired) {
+    return {
+      skipped: true as const,
+      reason: "CONCURRENT_RUN",
+    };
   }
+
+  return locked.result;
 }
