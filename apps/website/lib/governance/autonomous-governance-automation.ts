@@ -54,7 +54,7 @@ async function withOrganizationLock<T>(
 }
 
 /** Only call while holding this organization's advisory lock. */
-export async function recoverInterruptedAutonomousGovernanceRuns(organizationId: string) {
+async function recoverInterruptedAutonomousGovernanceRuns(organizationId: string) {
   const finishedAt = new Date();
   return prisma.$transaction(async (tx) => {
     const recovered = await tx.autonomousGovernanceAutomationRun.updateMany({
