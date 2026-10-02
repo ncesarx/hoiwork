@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { nextAutonomousGovernanceRunAt } from "@/lib/governance/autonomous-governance-timing";
+import { publicGovernanceFailure } from "@/lib/governance/autonomous-governance-failure";
 import {
   evaluateCapabilityGovernanceMatrix,
   type GovernedCapability,
@@ -285,7 +286,11 @@ export async function getAutonomousGovernanceStatus(
       }),
     ]);
 
-  const lastRun = automationRuns[0] ?? null;
+  const safeRuns = automationRuns.map((run) => ({
+    ...run,
+    errorMessage: publicGovernanceFailure(run.errorMessage),
+  }));
+  const lastRun = safeRuns[0] ?? null;
 
   const enabledSince = latestConfigChange?.createdAt ?? automationConfig?.createdAt;
   const lastActivityAt = lastSchedulerRun?.startedAt && enabledSince &&
@@ -327,9 +332,12 @@ export async function getAutonomousGovernanceStatus(
       currentMode: automationConfig?.commitEnabled
         ? "COMMIT"
         : "DRY_RUN",
-      config: automationConfig,
+      config: automationConfig ? {
+        ...automationConfig,
+        lastError: publicGovernanceFailure(automationConfig.lastError),
+      } : null,
       lastRun,
-      runs: automationRuns,
+      runs: safeRuns,
     },
   };
 }

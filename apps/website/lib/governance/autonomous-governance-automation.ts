@@ -3,6 +3,7 @@ import { Client } from "pg";
 import { prisma } from "@/lib/prisma";
 import { reconcileAutonomousGovernanceState } from "@/lib/governance/autonomous-recovery-audit";
 import { autonomousGovernanceRunDue } from "@/lib/governance/autonomous-governance-timing";
+import { classifyGovernanceFailure } from "@/lib/governance/autonomous-governance-failure";
 
 export type AutonomousGovernanceAutomationSource =
   | "MANUAL"
@@ -243,10 +244,7 @@ export async function runAutonomousGovernanceAutomation(input: {
   } catch (error) {
     const finishedAt = new Date();
 
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Falha na automação de Autonomous Governance.";
+    const failureCode = classifyGovernanceFailure(error);
 
     if (runId) {
       const failedRun =
@@ -273,7 +271,8 @@ export async function runAutonomousGovernanceAutomation(input: {
               ? finishedAt.getTime() -
                 failedRun.startedAt.getTime()
               : null,
-            errorMessage: message,
+            errorMessage: failureCode,
+            metadata: { failureCode },
           },
         })
         .catch(() => {});
@@ -287,7 +286,7 @@ export async function runAutonomousGovernanceAutomation(input: {
         data: {
           lastRunAt: finishedAt,
           lastFailureAt: finishedAt,
-          lastError: message,
+          lastError: failureCode,
           consecutiveFailures: {
             increment: 1,
           },
