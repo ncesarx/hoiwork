@@ -154,10 +154,11 @@ export async function AutonomousGovernancePanel() {
 
       <div className="autonomous-governance-history">
         <h3>Últimas execuções</h3>
+        <p>As 20 execuções mais recentes incluem os diagnósticos de falha, mesmo após a retomada do scheduler.</p>
         {automation.runs.length ? (
           <div className="autonomous-governance-table-wrap">
             <table>
-              <thead><tr><th>Início (UTC)</th><th>Origem</th><th>Modo</th><th>Estado</th><th>Capabilities</th><th>Bloqueadas</th></tr></thead>
+              <thead><tr><th>Início (UTC)</th><th>Origem</th><th>Modo</th><th>Estado</th><th>Duração</th><th>Capabilities</th><th>Bloqueadas</th><th>Diagnóstico</th></tr></thead>
               <tbody>
                 {automation.runs.map((run) => (
                   <tr key={run.id}>
@@ -165,8 +166,15 @@ export async function AutonomousGovernancePanel() {
                     <td>{run.source}</td>
                     <td>{run.mode}</td>
                     <td>{run.status}</td>
-                    <td>{run.capabilities}</td>
-                    <td>{run.blocked}</td>
+                    <td>{run.durationMs === null ? "Não registrada" : `${run.durationMs.toLocaleString("pt-BR")} ms`}</td>
+                    <td>{run.status === "COMPLETED" ? run.capabilities : "—"}</td>
+                    <td>{run.status === "COMPLETED" ? run.blocked : "—"}</td>
+                    <td className="autonomous-governance-reasons">
+                      {run.status === "FAILED" ? run.errorMessage ?? "Falha sem diagnóstico registrado."
+                        : run.status === "RUNNING" ? "Avaliação em andamento."
+                        : run.status === "COMPLETED" ? "Avaliação concluída."
+                        : "Diagnóstico indisponível."}
+                    </td>
                   </tr>
                 ))}
               </tbody>

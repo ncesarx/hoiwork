@@ -180,6 +180,7 @@ export const manualSections = [
       "Consulte os painéis de automação de Discovery, Notificações e Observabilidade para entender qual rotina está sendo acompanhada.",
       "Em Autonomous Governance, diferencie DRY_RUN, que avalia sem aplicar as ações de COMMIT, de COMMIT, que pode efetivar mudanças.",
       "Mantenha Autonomous Governance COMMIT desabilitado (commitEnabled=false). Este manual não autoriza sua ativação.",
+      "Em Últimas execuções, consulte a duração e o diagnóstico de cada avaliação. Uma execução FAILED pode registrar interrupção ou falha de dependência; as contagens de capabilities só são apresentadas para avaliações COMPLETED.",
       "Leia o histórico de execução, modo, status, duração, erros e motivos de bloqueio. Uma execução concluída pode conter ações bloqueadas; isso não comprova que mudanças foram aplicadas.",
       "Solicite revisão técnica antes de alterar intervalo, retenção ou permissões. Concorrência, limites e resultados precisam ser avaliados pelos responsáveis pela operação.",
     ],
