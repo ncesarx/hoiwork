@@ -7,6 +7,7 @@ import { MemberRoleEditor } from "./member-role-editor";
 import { MemberAccessButton } from "./member-access-button";
 import { InvitationForm } from "./invitation-form";
 import { OrganizationProfileForm } from "./organization-profile-form";
+import { CreateOrganizationForm } from "./create-organization-form";
 import { RevokeInvitationButton } from "./revoke-invitation-button";
 import { ReplaceInvitationForm } from "./replace-invitation-form";
 import { AccessAuditExportForm } from "./access-audit-export-form";
@@ -50,6 +51,14 @@ export default async function OrganizationAccessPage() {
           <p>O nome aparece no painel e no cabeçalho para todos os usuários desta organização. Empresas diferentes devem usar organizações separadas.</p>
         </div></div>
         <OrganizationProfileForm name={organization.name} />
+      </section>
+
+      <section className={styles.panel} aria-labelledby="new-company-title">
+        <div className={styles.heading}><div>
+          <h2 id="new-company-title">Cadastrar outra empresa</h2>
+          <p>A nova empresa começa com inventário, chamados e serviços vazios. Você será seu administrador e poderá convidar os usuários dela. Ao cadastrar, o portal abrirá a nova organização; use o seletor no cabeçalho para voltar.</p>
+        </div></div>
+        <CreateOrganizationForm />
       </section>
 
       <section className={styles.panel} aria-labelledby="invite-title">

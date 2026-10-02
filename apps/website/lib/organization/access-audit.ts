@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 const actions = [
+  "ORGANIZATION_CREATED",
   "ORGANIZATION_PROFILE_UPDATED",
   "MEMBERSHIP_ROLE_CHANGED",
   "MEMBERSHIP_ACCESS_SUSPENDED",
@@ -17,6 +18,7 @@ const actions = [
 ];
 
 const labels: Record<string, string> = {
+  ORGANIZATION_CREATED: "Empresa cadastrada",
   ORGANIZATION_PROFILE_UPDATED: "Nome da empresa alterado",
   MEMBERSHIP_ROLE_CHANGED: "Papel alterado",
   MEMBERSHIP_ACCESS_SUSPENDED: "Acesso suspenso",
