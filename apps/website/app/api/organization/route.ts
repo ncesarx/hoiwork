@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireOrganization } from "@/lib/authz";
 import { ORGANIZATION_CONTEXT_COOKIE } from "@/lib/organization/context-cookie";
-import { createClientOrganization, OrganizationCreationError } from "@/lib/organization/create";
-import { organizationProfileSchema } from "@/lib/organization/profile";
+import { createClientOrganization, OrganizationCreationError, organizationCreationSchema } from "@/lib/organization/create";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,9 +11,9 @@ export async function POST(request: Request) {
   if (membership.role !== "ADMIN") {
     return NextResponse.json({ ok: false, error: "Somente ADMIN pode cadastrar uma empresa." }, { status: 403 });
   }
-  const parsed = organizationProfileSchema.safeParse(await request.json().catch(() => null));
+  const parsed = organizationCreationSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: "Informe o nome da empresa com até 120 caracteres." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Atualize a página e informe o nome da empresa com até 120 caracteres." }, { status: 400 });
   }
   try {
     const created = await createClientOrganization({
