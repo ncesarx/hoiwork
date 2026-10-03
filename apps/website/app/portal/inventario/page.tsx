@@ -9,7 +9,8 @@ import {
 } from "@/lib/inventory/proxmox-topology";
 import { DEMO_ASSET_IDS } from "@/lib/inventory/demo-assets";
 import { ManualAssetForm } from "./manual-asset-form";
-import { manualAssetTypes } from "@/lib/inventory/manual-asset-schema";
+import { isManualAssetMetadata, manualAssetTypes } from "@/lib/inventory/manual-asset-schema";
+import { ManualAssetEditor } from "./manual-asset-editor";
 import {
   COLLECTION_RECENT_MINUTES,
   collectionFreshness,
@@ -388,6 +389,10 @@ export default async function Page({ searchParams }: Props) {
                     <dd>{asset.serialNumber ?? "—"}</dd>
                   </div>
                 </dl>
+                {["ADMIN", "TECHNICIAN"].includes(membership.role) && isManualAssetMetadata(asset.metadata) ? <ManualAssetEditor asset={{
+                  id: asset.id, name: asset.name, type: asset.type, manufacturer: asset.manufacturer, model: asset.model,
+                  serialNumber: asset.serialNumber, ipAddress: asset.ipAddress, location: asset.location, updatedAt: asset.updatedAt.toISOString(),
+                }} /> : null}
               </article>
             ))}
           </div>

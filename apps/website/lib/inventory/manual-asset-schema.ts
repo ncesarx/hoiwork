@@ -20,3 +20,12 @@ export const manualAssetSchema = z.object({
   ipAddress: optionalText(45), location: optionalText(200),
   requestId: z.string().uuid().transform((value) => value.toLowerCase()),
 }).strict();
+
+export const manualAssetUpdateSchema = manualAssetSchema.omit({ requestId: true }).extend({
+  expectedUpdatedAt: z.iso.datetime(),
+});
+
+export function isManualAssetMetadata(metadata: unknown) {
+  return Boolean(metadata && typeof metadata === "object" && !Array.isArray(metadata) &&
+    "source" in metadata && metadata.source === "MANUAL");
+}
