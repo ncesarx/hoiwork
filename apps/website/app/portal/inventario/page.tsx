@@ -12,6 +12,7 @@ import { ManualAssetForm } from "./manual-asset-form";
 import { isManualAssetMetadata, manualAssetTypes } from "@/lib/inventory/manual-asset-schema";
 import { ManualAssetEditor } from "./manual-asset-editor";
 import { ManualAssetHistory } from "./manual-asset-history";
+import { ManualAssetExport } from "./manual-asset-export";
 import {
   COLLECTION_RECENT_MINUTES,
   collectionFreshness,
@@ -222,6 +223,7 @@ export default async function Page({ searchParams }: Props) {
           asset.model,
           asset.serialNumber,
           asset.ipAddress,
+          asset.location,
         ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(query))),
   );
 
@@ -238,6 +240,7 @@ export default async function Page({ searchParams }: Props) {
       <form className="data-filters">
         <input
           name="q"
+          maxLength={200}
           defaultValue={p.q}
           placeholder="Pesquisar nome, nó, VMID ou IP"
         />
@@ -257,6 +260,7 @@ export default async function Page({ searchParams }: Props) {
         </select>
         <button>Filtrar</button>
       </form>
+      {["ADMIN", "TECHNICIAN"].includes(membership.role) ? <ManualAssetExport key={`${query}:${type}`} query={query} type={type} /> : null}
 
       {instances.length > 0 && (
         <section className="inventory-collection" aria-label="Atualização das fontes Proxmox">
