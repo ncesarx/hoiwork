@@ -20,7 +20,8 @@ export const manualSections = [
     intro: "Prepare o acesso e o contexto do cliente antes de cadastrar a infraestrutura. Organização, usuário e vínculo de acesso são diferentes de uma instância Proxmox.",
     steps: [
       "Reúna nome do cliente, responsáveis, contatos, sites, escopo contratado e ambientes que serão acompanhados.",
-      "Solicite ao administrador o provisionamento da organização e dos usuários, com os vínculos e permissões necessários. O portal atual não oferece uma tela administrativa completa de cadastro de novos clientes.",
+      "O ADMIN cadastra a empresa em Organização e acessos e cria os convites dos usuários com os papéis adequados. Confirme o nome da empresa no cabeçalho antes de cadastrar dados ou enviar convites.",
+      "No Dashboard, o ADMIN acompanha Configuração da empresa: acessos ativos, convites aguardando ativação, coleta Proxmox e inventário. Uma integração só indica coleta recente quando a última tentativa não falhou e os dados estão atualizados. Proxmox é opcional para empresas que não usam essa plataforma.",
       "O ADMIN pode editar o nome da empresa em Organização e acessos → Empresa no portal. O nome aparece no painel e no cabeçalho para todos os usuários vinculados; a alteração fica no histórico. Empresas diferentes devem usar organizações separadas.",
       "Para outro cliente, use Organização e acessos → Cadastrar outra empresa. Você será ADMIN da nova organização, que começa sem inventário, chamados ou serviços. O portal abre essa empresa automaticamente; confira o nome no cabeçalho antes de criar os convites. Os usuários e dados da empresa anterior permanecem nela.",
       "O administrador pode consultar usuários vinculados e alterar seus papéis em Organização e acessos. A alteração do próprio papel é bloqueada e cada mudança é auditada.",

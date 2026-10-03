@@ -1,0 +1,13 @@
+.panel { margin-bottom: 24px; }
+.intro { color: #a9bac5; line-height: 1.6; }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; list-style: none; padding: 0; margin: 18px 0 0; }
+.steps li { min-width: 0; padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: #ffffff03; overflow-wrap: anywhere; }
+.heading { display: flex; flex-wrap: wrap; gap: 10px; align-items: start; }
+.heading h3 { flex: 1 1 150px; margin: 0; font-size: 16px; }
+.heading span { padding: 5px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; }
+.done { color: #9beaaf; background: #79d98e12; }
+.pending { color: var(--gold2); background: #d4a01712; }
+.steps p { color: #a9bac5; font-size: 13px; line-height: 1.6; }
+.steps a { color: var(--gold2); font-size: 13px; text-decoration: none; font-weight: 700; }
+.steps a:focus-visible { outline: 2px solid var(--gold2); outline-offset: 4px; }
+@media (max-width: 1000px) { .steps { grid-template-columns: 1fr; } }

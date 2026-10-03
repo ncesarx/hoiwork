@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/portal-data";
+import { OrganizationOnboarding } from "@/components/portal/organization-onboarding";
 import {
   COLLECTION_RECENT_MINUTES,
   formatCollectionTime,
@@ -32,6 +33,7 @@ export default async function PortalPage(){
       <article><strong>{d.documentCount}</strong><span>Documentos</span></article>
       <article><strong>{d.contractCount}</strong><span>Contratos ativos</span></article>
     </section>
+    <OrganizationOnboarding assetCount={d.assetCount} endpoints={d.proxmoxEndpoints} />
     <section className="data-dashboard-grid">
       <article className="portal-panel">
         <div className="portal-panel__header"><div><span>Inventário</span><h2>Infraestrutura</h2></div><Link href="/portal/inventario">Abrir inventário</Link></div>
