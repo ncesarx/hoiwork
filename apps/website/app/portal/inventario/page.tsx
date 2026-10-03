@@ -11,6 +11,7 @@ import { DEMO_ASSET_IDS } from "@/lib/inventory/demo-assets";
 import { ManualAssetForm } from "./manual-asset-form";
 import { isManualAssetMetadata, manualAssetTypes } from "@/lib/inventory/manual-asset-schema";
 import { ManualAssetEditor } from "./manual-asset-editor";
+import { ManualAssetHistory } from "./manual-asset-history";
 import {
   COLLECTION_RECENT_MINUTES,
   collectionFreshness,
@@ -393,6 +394,7 @@ export default async function Page({ searchParams }: Props) {
                   id: asset.id, name: asset.name, type: asset.type, manufacturer: asset.manufacturer, model: asset.model,
                   serialNumber: asset.serialNumber, ipAddress: asset.ipAddress, location: asset.location, updatedAt: asset.updatedAt.toISOString(),
                 }} /> : null}
+                {["ADMIN", "TECHNICIAN"].includes(membership.role) && isManualAssetMetadata(asset.metadata) ? <ManualAssetHistory assetId={asset.id} assetName={asset.name} version={asset.updatedAt.toISOString()} /> : null}
               </article>
             ))}
           </div>

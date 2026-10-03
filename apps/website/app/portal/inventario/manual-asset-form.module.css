@@ -10,5 +10,13 @@
 .editor > button { padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: #06131d; color: var(--gold2); cursor: pointer; font: inherit; font-size: 13px; }
 .editor p { color: #a9bac5; font-size: 13px; line-height: 1.6; }
 .editor .fields { grid-template-columns: 1fr; }
+.history { margin-top: 12px; }
+.history button { padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: #06131d; color: var(--gold2); cursor: pointer; font: inherit; font-size: 13px; }
+.history button:disabled { opacity: .6; cursor: not-allowed; }
+.history p { color: #a9bac5; font-size: 13px; line-height: 1.6; }
+.historyEvents { list-style: none; margin: 12px 0; padding: 0; }
+.historyEvents > li { padding: 14px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; font-size: 13px; }
+.historyEvents ul { padding-left: 18px; color: #c7d6df; line-height: 1.6; }
+.historyEvents span { text-transform: none !important; color: #c7d6df !important; font-size: 13px !important; }
 @media (max-width: 900px) { .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .fields { grid-template-columns: 1fr; } }
