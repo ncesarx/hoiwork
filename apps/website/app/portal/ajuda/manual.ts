@@ -109,8 +109,10 @@ export const manualSections = [
     level: "Operação",
     intro: "O Inventário corporativo reúne recursos Proxmox descobertos e ativos cadastrados na organização, com as fontes apresentadas separadamente.",
     steps: [
+      "ADMIN e TECHNICIAN podem usar Cadastrar equipamento para registrar nome, tipo, fabricante, modelo, número de série, IP e localização. O IP é opcional; quando preenchido, deve ser IPv4 ou IPv6 válido. O cadastro é auditado e aparece somente na empresa selecionada.",
+      "Equipamentos manuais entram como Sem estado verificado. O cadastro não testa conexão, não monitora disponibilidade e não substitui uma coleta Proxmox. Se houver falha de conexão, repita o pedido na mesma página, mantendo os campos; confira o inventário antes de recarregar e cadastrar novamente.",
       "Pesquise por nome, nó, VMID ou IP. Para ativos cadastrados manualmente, a pesquisa também considera fabricante, modelo e número de série.",
-      "Filtre por nós, VMs, contêineres, storages, redes ou tipos de ativos cadastrados, como servidores, firewalls e switches.",
+      "Filtre por nós, VMs, contêineres, storages, redes ou tipos de ativos cadastrados, como servidores, computadores, impressoras, firewalls e switches.",
       "Revise clusters e seus endpoints, nós e recursos associados. Confira a última sincronização de cada endpoint antes de interpretar o estado dos recursos.",
       "Confira ativos cadastrados na seção separada. Se não houver resultados, limpe a pesquisa, selecione todos os tipos e verifique a coleta e a organização ativa.",
     ],

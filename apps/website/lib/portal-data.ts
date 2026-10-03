@@ -55,7 +55,7 @@ export const getDashboardData = cache(async () => {
     })),
     ...registered.map((asset) => ({
       id: asset.id, name: asset.name, type: asset.type,
-      status: asset.status, ipAddress: asset.ipAddress,
+      status: asset.status === "UNKNOWN" ? "Sem estado verificado" : asset.status, ipAddress: asset.ipAddress,
       source: "Cadastro", observedAt: null, freshness: null,
     })),
   ];

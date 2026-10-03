@@ -38,7 +38,7 @@ export async function OrganizationOnboarding({ assetCount, endpoints }: {
       state: assetCount > 0 ? "Recursos disponíveis" : "Sem recursos",
       detail: assetCount > 0
         ? `${assetCount} recurso(s) disponível(is). Confira nomes, estrutura e datas de coleta antes de usar os indicadores.`
-        : "Nenhum recurso disponível. Após a descoberta, confira o inventário desta empresa.",
+        : "Cadastre equipamentos manualmente ou execute a descoberta Proxmox. Depois confira o inventário desta empresa.",
       href: "/portal/inventario", action: "Abrir inventário", done: assetCount > 0,
     },
   ];

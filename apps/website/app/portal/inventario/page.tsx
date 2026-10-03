@@ -8,6 +8,8 @@ import {
   type InventoryResource,
 } from "@/lib/inventory/proxmox-topology";
 import { DEMO_ASSET_IDS } from "@/lib/inventory/demo-assets";
+import { ManualAssetForm } from "./manual-asset-form";
+import { manualAssetTypes } from "@/lib/inventory/manual-asset-schema";
 import {
   COLLECTION_RECENT_MINUTES,
   collectionFreshness,
@@ -124,7 +126,7 @@ function freshnessLabel(freshness: CollectionFreshness) {
 }
 
 export default async function Page({ searchParams }: Props) {
-  const { organization } = await requireOrganization();
+  const { organization, membership } = await requireOrganization();
   const p = await searchParams;
   const query = p.q?.trim().toLocaleLowerCase("pt-BR") ?? "";
   const type = p.type ?? "ALL";
@@ -224,13 +226,13 @@ export default async function Page({ searchParams }: Props) {
   return (
     <>
       <section className="portal-heading">
-        <span>Recursos descobertos</span>
+        <span>Recursos da empresa</span>
         <h1>Inventário corporativo</h1>
         <p>
-          Nós, VMs, contêineres, armazenamento e redes do Proxmox, agrupados por
-          cluster.
+          Recursos Proxmox agrupados por cluster e equipamentos cadastrados manualmente.
         </p>
       </section>
+      {["ADMIN", "TECHNICIAN"].includes(membership.role) ? <ManualAssetForm /> : null}
       <form className="data-filters">
         <input
           name="q"
@@ -247,6 +249,9 @@ export default async function Page({ searchParams }: Props) {
           <option value="SERVER">Servidores</option>
           <option value="FIREWALL">Firewalls</option>
           <option value="SWITCH">Switches</option>
+          <option value="WORKSTATION">Computadores</option>
+          <option value="PRINTER">Impressoras</option>
+          <option value="OTHER">Outros equipamentos</option>
         </select>
         <button>Filtrar</button>
       </form>
@@ -357,8 +362,8 @@ export default async function Page({ searchParams }: Props) {
             {assets.map((asset) => (
               <article key={asset.id}>
                 <div>
-                  <span>{asset.type}</span>
-                  <b>{asset.status}</b>
+                  <span>{manualAssetTypes.find((type) => type.value === asset.type)?.label ?? asset.type}</span>
+                  <b>{asset.status === "UNKNOWN" ? "Sem estado verificado" : asset.status}</b>
                 </div>
                 <h2>{asset.name}</h2>
                 <dl>
@@ -394,7 +399,7 @@ export default async function Page({ searchParams }: Props) {
             "Nenhum recurso corresponde aos filtros."
           ) : (
             <>
-              Nenhum recurso descoberto.{" "}
+              Nenhum recurso disponível. Solicite ao administrador ou técnico o cadastro dos equipamentos ou, se a empresa usa Proxmox,{" "}
               <Link href="/portal/integracoes/proxmox">
                 Sincronize a integração Proxmox
               </Link>
